@@ -4,7 +4,7 @@
 {% for tenant_name in keystone['openstack_tenants'] %}
   {% set tenant_users = salt['openstack_utils.openstack_users'](tenant_name) %}
   {% for user in tenant_users %}
-keystone_{{ user }}_user:
+keystone_{{ user }}_user_in_{{ tenant_name }}:
   keystone:
     - user_present
     - name: {{ user }}
@@ -23,7 +23,7 @@ keystone_{{ user }}_user:
     {% if tenant_users[user].has_key('keystonerc') and
           tenant_users[user]['keystonerc'].has_key('create') and
           salt['openstack_utils.boolean_value'](tenant_users[user]['keystonerc']['create']) %}
-keystonerc_{{ user }}_create:
+keystonerc_{{ user }}_in_{{ tenant_name }}_create:
   file.managed:
     - name: {{ tenant_users[user]['keystonerc']['path'] }}
     - contents: |
@@ -34,9 +34,9 @@ keystonerc_{{ user }}_create:
         export OS_AUTH_URL={{ keystone['openstack_services']['keystone']['endpoint']['publicurl'].format(openstack_parameters['controller_ip']) }}
         export OS_VOLUME_API_VERSION=2
         export OS_IMAGE_API_VERSION=2
-        export PS1='[\u@\h \W(keystonerc_{{ user }})]\$ '
+        export PS1='[\u@\h \W(keystonerc_{{ user }}:{{ tenant_name }})]\$ '
     - require:
-      - keystone: keystone_{{ user }}_user
+      - keystone: keystone_{{ user }}_user_in_{{ tenant_name }}
     {% endif %}
   {% endfor %}
 {% endfor %}
