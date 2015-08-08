@@ -47,7 +47,10 @@
 %}
 
 
-{% set minion_states = [] %}
+{% set minion_states = [
+        "system"
+    ]
+%}
 {% set minion_id = grains['id'] %}
 
 {% if minion_id == pillar['controller'] %}
