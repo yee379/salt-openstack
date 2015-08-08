@@ -6,4 +6,6 @@ openstack:
 {% for state in minion_states %}
     - {{ state }}
 {% endfor %}
+    - splunk
+    
 {% endif %}
