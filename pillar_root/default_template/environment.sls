@@ -27,6 +27,13 @@ storage:
 compute:
   - "<minion_id>"
 
+# horizon:
+#   https: True
+#   servername: openstack.example.com
+#   SSLCertificateFile: /etc/pki/tls/certs/openstack.example.com.crt
+#   SSLCACertificateFile: /etc/pki/tls/certs/openstack.example.com.crt
+#   # SSLCertificateKeyFile: /etc/pki/tls/certs/openstack.example.com.key
+
 cinder:
   volumes_group_name: "cinder-volumes"
   volumes_path: "/var/lib/cinder/cinder-volumes"

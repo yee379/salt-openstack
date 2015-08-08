@@ -39,6 +39,30 @@ horizon_setsebool_on:
     - require:
       - file: horizon_local_settings
 
+{% if salt['pillar.get']('horizon:https',False) %}
+
+{% set servername = salt['pillar.get']( 'horizon:servername' ) %}
+create horizon cert:
+  cmd.run:
+    - name: ./make-dummy-cert {{ servername }}.crt
+    - cwd: /etc/pki/tls/certs/
+    - unless: test -e {{ salt['pillar.get']( 'horizon:SSLCertificateFile' ) }}
+
+httpd mod ssl:
+  pkg.installed:
+    - name: mod_ssl
+
+horizon httpd config:
+  file.managed:
+    - name: /etc/httpd/conf.d/openstack-dashboard.conf
+    - backup: True
+    - template: jinja
+    - source: salt://openstack/horizon/{{ grains['os'] }}/openstack-dashboard.conf
+    - require:
+      - cmd: create horizon cert
+      - pkg: httpd mod ssl
+
+{% endif %}
 
 {% for service in horizon['services'] %}
 horizon_{{ service }}_running:
@@ -47,4 +71,7 @@ horizon_{{ service }}_running:
     - name: {{ horizon['services'][service] }}
     - watch: 
       - file: horizon_local_settings
+  {% if salt['pillar.get']('horizon:https',False) %}
+      - file: horizon httpd config
+  {% endif %}
 {% endfor %}

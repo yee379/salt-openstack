@@ -15,21 +15,9 @@ open openstack node {{ host }} on firewall:
     - save: True
 {% endfor %}
 
-open httpd on firewall:
-  iptables.insert:
-    - position: {{ count + 1 }}
-    - chain: INPUT
-    - table: filter
-    - jump: ACCEPT
-    - match: state
-    - connstate: NEW
-    - dport: 80
-    - proto: tcp
-    - save: True
-      
 open novnc on firewall:
   iptables.insert:
-    - position: {{ count + 2 }}
+    - position: {{ count + 1 }}
     - chain: INPUT
     - table: filter
     - jump: ACCEPT
@@ -38,8 +26,33 @@ open novnc on firewall:
     - dport: 6080
     - proto: tcp
     - save: True
+      
+open http on firewall:
+  iptables.insert:
+    - position: {{ count + 2 }}
+    - chain: INPUT
+    - table: filter
+    - jump: ACCEPT
+    - match: state
+    - connstate: NEW
+    - dport: 80
+    - proto: tcp
+    - save: True
     - require:
-      - iptables: open httpd on firewall
-  
-  
-  
+      - iptables: open novnc on firewall
+
+{% if salt['pillar.get']('horizon:https',False) %}
+open https on firewall:
+  iptables.insert:
+    - position: {{ count + 3 }}
+    - chain: INPUT
+    - table: filter
+    - jump: ACCEPT
+    - match: state
+    - connstate: NEW
+    - dport: 443
+    - proto: tcp
+    - save: True
+    - require:
+      - iptables: open http on firewall
+{% endif %}

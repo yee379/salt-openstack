@@ -7,6 +7,12 @@ from openstack_dashboard import exceptions
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
+{% if salt['pillar.get']('horizon:https',False) %}
+USE_SSL = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+{% endif %}
 
 WEBROOT = '/dashboard/'
 ALLOWED_HOSTS = ['*']
