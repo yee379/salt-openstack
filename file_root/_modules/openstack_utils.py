@@ -507,7 +507,24 @@ def yum_repository():
                                         'system:repo_packages', default=[])
     }
 
+def __http_proxy_args():
+    proto = __salt__['pillar.get']('http_proxy:proto', default=None)
+    server = __salt__['pillar.get']('http_proxy:server', default=None)
+    port = __salt__['pillar.get']('http_proxy:port', default=None)
+    return proto, server, port
 
+def rpm_http_proxy_args():
+    proto, server, port = __http_proxy_args()
+    if proto and server and port:
+        return '--httpproxy %s --httpport  %s' % (server, port) 
+    return ''
+    
+def curl_http_proxy_args():
+    proto, server, port = __http_proxy_args()
+    if proto and server and port:
+        return '--proxy %s://%s:%s' % (proto,server, port) 
+    return ''
+    
 def system():
     return __salt__['pillar.get']('resources:system')
 

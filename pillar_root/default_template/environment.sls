@@ -12,6 +12,11 @@ debug_mode: <True/False>
 
 system_upgrade: <True/False>
 
+# http_proxy:
+#   proto: http
+#   server: example.com
+#   port: 3128
+
 hosts:
   "<minion_id>": "<minion_management_ip_address>"
 

@@ -106,10 +106,10 @@ keystone_virtual_host_enable:
     - require:
       - cmd: keystone_apache2_wsgi_enable
 
-
+{% set curl_http_args = salt['openstack_utils.curl_http_proxy_args']() %}
 keystone_wsgi_components:
   cmd.run:
-    - name: "curl {{ keystone['files']['wsgi_components_url'] }} | tee {{ keystone['files']['www'] }}/main {{ keystone['files']['www'] }}/admin"
+    - name: "curl {{ curl_http_args }} {{ keystone['files']['wsgi_components_url'] }} | tee {{ keystone['files']['www'] }}/main {{ keystone['files']['www'] }}/admin"
     - require: 
       - file: keystone_virtual_host_enable
 
