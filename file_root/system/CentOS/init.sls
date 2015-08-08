@@ -44,6 +44,10 @@ system_iptables_running:
     - require:
       - service: system_firewalld_dead
 
+include:
+  - system.CentOS.iptables
+  
+
 {% set rpm_http_args = salt['openstack_utils.rpm_http_proxy_args']() %}
 {% for repo in yum_repository['repositories'] %}
 system_repository_{{ repo }}_repo_install:
@@ -66,3 +70,4 @@ system_repository_{{ pkg }}_install:
       - cmd: system_repository_{{ repo }}_repo_install
   {% endfor %}
 {% endfor %}
+
