@@ -1,7 +1,23 @@
+{% set count = 4 %}
+
+{% for host in salt['pillar.get']( 'hosts' ) %}
+  {% set host_ip = salt['openstack_utils.minion_ip']( host ) %}
+  {% set count = count + 1 %}
+open openstack node {{ host }} on firewall:
+  iptables.insert:
+    - position: {{ count }}
+    - chain: INPUT
+    - table: filter
+    - jump: ACCEPT
+    - match: state
+    - connstate: NEW
+    - source: {{ host_ip }}
+    - save: True
+{% endfor %}
 
 open httpd on firewall:
   iptables.insert:
-    - position: 7
+    - position: {{ count + 1 }}
     - chain: INPUT
     - table: filter
     - jump: ACCEPT
@@ -10,12 +26,10 @@ open httpd on firewall:
     - dport: 80
     - proto: tcp
     - save: True
-    - require:
-      - service: system_iptables_running
       
 open novnc on firewall:
   iptables.insert:
-    - position: 8
+    - position: {{ count + 2 }}
     - chain: INPUT
     - table: filter
     - jump: ACCEPT
@@ -26,4 +40,6 @@ open novnc on firewall:
     - save: True
     - require:
       - iptables: open httpd on firewall
-      
+  
+  
+  
