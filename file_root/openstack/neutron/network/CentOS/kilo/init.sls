@@ -115,7 +115,9 @@ neutron_network_l3_agent_conf:
     - sections: 
         DEFAULT: 
           interface_driver: neutron.agent.linux.interface.OVSInterfaceDriver
-          external_network_bridge: {{ neutron['external_bridge'] }}
+          # external_network_bridge: {{ neutron['external_bridge'] }}
+          external_network_bridge: ""
+          gateway_external_network_id: ""
           router_delete_namespaces: True
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
