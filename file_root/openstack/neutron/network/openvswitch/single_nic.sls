@@ -1,24 +1,24 @@
 {% set neutron = salt['openstack_utils.neutron']() %}
 
 
-openvswitch_bridge_br-proxy_create:
+openvswitch_bridge_single_nic_br-proxy_create:
   cmd.run:
     - name: "ovs-vsctl add-br br-proxy"
     - unless: "ovs-vsctl br-exists br-proxy"
 
 
-openvswitch_bridge_br-proxy_up:
+openvswitch_bridge_single_nic_br-proxy_up:
   cmd.run:
     - name: "ip link set br-proxy promisc on"
     - require: 
-      - cmd: openvswitch_bridge_br-proxy_create
+      - cmd: openvswitch_bridge_single_nic_br-proxy_create
 
 
 openvswitch_{{ neutron['single_nic']['interface'] }}_up:
   cmd.run:
     - name: "ip link set {{ neutron['single_nic']['interface'] }} promisc on"
     - require:
-      - cmd: openvswitch_bridge_br-proxy_up
+      - cmd: openvswitch_bridge_single_nic_br-proxy_up
 
 
 {% set index = 1 %}
@@ -38,7 +38,7 @@ openvswitch_bridge_{{ bridge }}_up:
       - cmd: openvswitch_bridge_{{ bridge }}_create
 
 
-  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'] ] %}
+  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'], 'br-proxy' ] %}
 openvswitch_veth_{{ bridge }}_create:
   cmd.run:
     - name: "ip link add veth-proxy-{{ index }} type veth peer name veth-{{ index }}-proxy"

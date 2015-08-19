@@ -15,7 +15,7 @@ openvswitch_promisc_interfaces_script:
 {% set index = 1 %}
 {% for bridge in neutron['bridges'] %}
         ip link set {{ bridge }} up
-  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'] ] %}
+  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'], 'br-proxy' ] %}
         ip link add veth-proxy-{{ index }} type veth peer name veth-{{ index }}-proxy
         ip link set veth-{{ index }}-proxy up promisc on
         ip link set veth-proxy-{{ index }} up promisc on
@@ -25,7 +25,7 @@ openvswitch_promisc_interfaces_script:
     - require:
 {% set index = 1 %}
 {% for bridge in neutron['bridges'] %}
-  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'] ] %}
+  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'], 'br-proxy' ] %}
       - cmd: openvswitch_veth-proxy-{{ index }}_up
       - cmd: openvswitch_veth-{{ index }}-proxy_up
   {% endif %}
@@ -92,7 +92,7 @@ openvswitch_{{ neutron['single_nic']['interface'] }}_ovs_port_network_script:
 
 {% set index = 1 %}
 {% for bridge in neutron['bridges'] %}
-  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'] ] %}
+  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'], 'br-proxy' ] %}
 openvswitch_veth-proxy-{{ index }}_ovs_port_network_script:
   file.managed:
     - name: "{{ openvswitch['conf']['network_scripts'] }}/ifcfg-veth-proxy-{{ index }}"

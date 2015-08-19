@@ -17,7 +17,7 @@ openvswitch_interfaces_promisc_upstart_job:
             ip link set br-proxy up promisc on
 {% set index = 1 %}
 {% for bridge in neutron['bridges'] %}
-  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'] ] %}
+  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'], 'br-proxy' ] %}
             ip link add veth-proxy-{{ index }} type veth peer name veth-{{ index }}-proxy
             ip link set veth-{{ index }}-proxy up promisc on
             ip link set veth-proxy-{{ index }} up promisc on
@@ -28,7 +28,7 @@ openvswitch_interfaces_promisc_upstart_job:
     - require:
 {% set index = 1 %}
 {% for bridge in neutron['bridges'] %}
-  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'] ] %}
+  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'], 'br-proxy' ] %}
       - cmd: openvswitch_veth-proxy-{{ index }}_up
       - cmd: openvswitch_veth-{{ index }}-proxy_up
   {% endif %}
