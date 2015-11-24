@@ -1,5 +1,5 @@
 import salt
-
+from re import match
 
 def _keystone_services():
     return {'keystone': {'description': 'Openstack Identity',
@@ -114,7 +114,12 @@ def _rpm_repo_name(rpm_repo_url=None):
     '''
     if not rpm_repo_url:
         return None
-    return rpm_repo_url.split('/')[-1].split('.')[0]
+    name = rpm_repo_url.split('/')[-1].split('.')[0]
+    m = match( r'^(?P<name>.*)-\d+-\d+$', name )
+    if m:
+        return m.groupdict()['name']
+    else:
+        return name
 
 
 def _unquote_str(str_var):
@@ -138,6 +143,9 @@ def kilo_keystone_services():
     services = _keystone_services()
     services['cinder']['endpoint'] = services['cinderv2']['endpoint']
     return services
+
+def liberty_keystone_services():
+    return kilo_keystone_services()
 
 
 def openstack_series():
