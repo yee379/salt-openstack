@@ -445,13 +445,15 @@ def network_script_ip_configs(interface_name=None):
     bootproto = _unquote_str(__salt__['ini.get_option'](
                 '%s/ifcfg-%s' % (network_scripts, interface_name),
                 'DEFAULT_IMPLICIT', 'BOOTPROTO'))
-    context = { 'BOOTPROTO': bootproto }
+    context = {}
 
-    if compare_ignore_case(bootproto, "dhcp"):
+    if compare_ignore_case(bootproto, "dhcp") or bootproto == None:
+        context.update( { 'OVSBOOTPROTO': 'dhcp', 'OVSDHCPINTERFACES': interface_name } )
         return context
 
     if compare_ignore_case(bootproto, "static") or \
         compare_ignore_case(bootproto, "none"):
+        context.update( { 'BOOTPROTO': bootproto } )
         configs = ['IPADDR', 'NETMASK', 'PREFIX', 'GATEWAY', 'DNS1', 'DNS2']
         for config in configs:
             config_value = _unquote_str(__salt__['ini.get_option'](
