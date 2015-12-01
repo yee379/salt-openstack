@@ -23,6 +23,8 @@ mysql_conf:
         collation-server = utf8_general_ci
         init-connect = 'SET NAMES utf8'
         character-set-server = utf8
+        open_files_limit = 8192
+        max_connections = 1000
     - require: 
 {% for pkg in mysql['packages'] %}
       - pkg: mysql_{{ pkg }}_install
