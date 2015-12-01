@@ -255,7 +255,7 @@ def router_present(name=None,
         network = _neutron_module_call(
             'list_networks', name=gateway_network, **connection_args)
         gateway_network_id = network[gateway_network]['id']
-        if not existing_router['external_gateway_info'] :
+        if not existing_router['external_gateway_info'] and not existing_router['external_gateway_info'] == None:
             if existing_router['external_gateway_info']['network_id'] != gateway_network_id:
                 diff.update({'external_gateway_info': {'network_id': gateway_network_id}})
         else:
