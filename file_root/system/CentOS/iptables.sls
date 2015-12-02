@@ -4,55 +4,31 @@
   {% set host_ip = salt['openstack_utils.minion_ip']( host ) %}
   {% set count = count + 1 %}
 open openstack node {{ host }} on firewall:
-  iptables.insert:
-    - position: {{ count }}
-    - chain: INPUT
-    - table: filter
-    - jump: ACCEPT
-    - match: state
-    - connstate: NEW
-    - source: {{ host_ip }}
-    - save: True
+  # TODO: set to just the vxlan ports?
+  cmd.run:
+    - name: iptables -I INPUT {{ count }} -t filter -s {{ host_ip }} -m state --state NEW -j ACCEPT && service iptables save && true
+    - unless: iptables -C INPUT -s {{ host_ip }} -m state --state NEW -j ACCEPT
 {% endfor %}
 
 open novnc on firewall:
-  iptables.insert:
-    - position: {{ count + 1 }}
-    - chain: INPUT
-    - table: filter
-    - jump: ACCEPT
-    - match: state
-    - connstate: NEW
-    - dport: 6080
-    - proto: tcp
-    - save: True
-      
+  cmd.run:
+    - name: iptables -I INPUT {{ count + 1 }} -t filter -m state --state NEW -p tcp --dport 6080 -j ACCEPT && service iptables save && true
+    - unless: iptables -C INPUT -m state --state NEW -p tcp --dport 6080 -j ACCEPT
+
+{% if grains['id'] in salt['pillar.get']('controller',[]) %}
+
 open http on firewall:
-  iptables.insert:
-    - position: {{ count + 2 }}
-    - chain: INPUT
-    - table: filter
-    - jump: ACCEPT
-    - match: state
-    - connstate: NEW
-    - dport: 80
-    - proto: tcp
-    - save: True
-    - require:
-      - iptables: open novnc on firewall
+  cmd.run:
+    - name: iptables -I INPUT {{ count + 2 }} -t filter -m state --state NEW -p tcp --dport 80 -j ACCEPT && service iptables save && true
+    - unless: iptables -C INPUT -m state --state NEW -p tcp --dport 80 -j ACCEPT
 
 {% if salt['pillar.get']('horizon:https',False) %}
 open https on firewall:
-  iptables.insert:
-    - position: {{ count + 3 }}
-    - chain: INPUT
-    - table: filter
-    - jump: ACCEPT
-    - match: state
-    - connstate: NEW
-    - dport: 443
-    - proto: tcp
-    - save: True
+  cmd.run:
+    - name: iptables -I INPUT {{ count + 3 }} -t filter -m state --state NEW -p tcp --dport 443 -j ACCEPT && service iptables save && true
+    - unless: iptables -C INPUT -m state --state NEW -p tcp --dport 443 -j ACCEPT
     - require:
-      - iptables: open http on firewall
+      - cmd: open http on firewall
+{% endif %}
+
 {% endif %}
