@@ -7,7 +7,11 @@
 neutron_openstack_router_{{ router }}:
   neutron.router_present:
     - name: {{ router }}
+  {% if 'interfaces' in neutron['routers'][router] %}
     - interfaces: {{ neutron['routers'][router]['interfaces'] }}
+  {% else %}
+    - interfaces: []
+  {% endif %}
     - gateway_network: {{ neutron['routers'][router]['gateway_network'] }}
     - connection_user: {{ neutron['routers'][router]['user'] }}
     - connection_tenant: {{ neutron['routers'][router]['tenant'] }}
