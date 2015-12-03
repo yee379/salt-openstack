@@ -164,6 +164,7 @@ def openstack_parameters():
     parameters = {
         'debug_mode': __salt__['pillar.get']('debug_mode', default=False),
         'controller_ip': minion_ip(controller_minion_id),
+        'controller_name': controller_minion_id,
         'reset': __salt__['pillar.get']('reset'),
         'message_queue': __salt__['pillar.get']('message_queue_engine'),
         'series': openstack_series(),
