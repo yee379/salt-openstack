@@ -78,3 +78,21 @@ openvswitch_veth-proxy-{{ index }}_up:
   {% endif %}
   {% set index = index + 1 %}
 {% endfor %}
+
+###
+# create the patch ports between the proxy bridge and the internal bridge
+###
+openvswitch proxy-int bridge patch ports:
+  cmd.run:
+    - name: ovs-vsctl add-port br-proxy phy-br-proxy -- set Interface  phy-br-proxy type=patch options:peer=int-br-proxy
+    - unless: ovs-vsctl list-ports br-proxy | grep phy-br-proxy
+    - require:
+      - cmd:  openvswitch_bridge_single_nic_br-proxy_create
+      
+openvswitch int-proxy bridge patch ports:
+  cmd.run:
+    - name: ovs-vsctl add-port br-int int-br-proxy -- set Interface  int-br-proxy type=patch options:peer=phy-br-proxy
+    - unless: ovs-vsctl list-ports br-int | grep int-br-proxy
+    - require:
+      - cmd:  openvswitch_bridge_single_nic_br-proxy_create
+
