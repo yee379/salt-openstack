@@ -12,6 +12,19 @@ horizon_local_settings:
     - template: jinja
     - defaults:
         controller_ip: "{{ openstack_parameters['controller_ip'] }}"
+  
+  {% if salt['pillar.get']('horizon:https',False) %}
+        https: horizon['https']
+  {% else %}
+        https: False
+  {% endif %}
+  
+  {% if salt['pillar.get']('horizon:secret_key',False) %}
+        secret_key: {{ salt['pillar.get']('horizon:secret_key') }}
+  {% else %}
+        secret_key: {{ salt['random.get_str']() }}
+  {% endif %}
+  
     - require:
 {% for pkg in horizon['packages'] %}
       - pkg: horizon_{{ pkg }}_install

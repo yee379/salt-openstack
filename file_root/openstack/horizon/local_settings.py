@@ -7,7 +7,7 @@ from openstack_dashboard import exceptions
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
-{% if salt['pillar.get']('horizon:https',False) %}
+{% if https %}
 USE_SSL = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
@@ -34,7 +34,7 @@ HORIZON_CONFIG = {
     'js_spec_files': [],
 }
 LOCAL_PATH = os.path.dirname(os.path.abspath(__file__))
-SECRET_KEY='{{ salt['random.get_str']() }}'
+SECRET_KEY='{{ secret_key }}'
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
