@@ -1,5 +1,8 @@
 import salt
 
+import logging
+LOG = logging.getLogger(__name__)
+from os.path import isfile
 
 def _keystone_services():
     return {'keystone': {'description': 'Openstack Identity',
@@ -443,8 +446,11 @@ def network_script_ip_configs(interface_name=None):
     if not interface_name:
         return []
     network_scripts = '/etc/sysconfig/network-scripts'
+    config_file = '%s/ifcfg-%s' % (network_scripts, interface_name)
+    if not isfile( config_file ):
+        raise SystemError( "interface name '%s' not defined on system: please correct single_nic interface defintion" % (interface_name,))
     bootproto = _unquote_str(__salt__['ini.get_option'](
-                '%s/ifcfg-%s' % (network_scripts, interface_name),
+                config_file,
                 'DEFAULT_IMPLICIT', 'BOOTPROTO'))
     context = {}
 
