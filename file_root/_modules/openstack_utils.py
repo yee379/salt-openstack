@@ -454,7 +454,7 @@ def network_script_ip_configs(interface_name=None):
                 'DEFAULT_IMPLICIT', 'BOOTPROTO'))
     context = {}
 
-    if compare_ignore_case(bootproto, "dhcp") or bootproto == None:
+    if compare_ignore_case(bootproto, "dhcp"):
         context.update( { 'OVSBOOTPROTO': 'dhcp', 'OVSDHCPINTERFACES': interface_name } )
         return context
 
