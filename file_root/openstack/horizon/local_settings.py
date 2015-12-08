@@ -8,10 +8,12 @@ DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 {% if https %}
+# as per http://docs.openstack.org/developer/horizon/topics/deployment.html#secure-site-recommendations
 USE_SSL = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_HTTPONLY = True
 {% endif %}
 
 WEBROOT = '/dashboard/'
@@ -32,6 +34,8 @@ HORIZON_CONFIG = {
     'angular_modules': [],
     'js_files': [],
     'js_spec_files': [],
+    'password_autocomplete': 'off',
+    # disable_password_reveal as per http://docs.openstack.org/security-guide/dashboard/checklist.html
 }
 LOCAL_PATH = os.path.dirname(os.path.abspath(__file__))
 SECRET_KEY='{{ secret_key }}'
