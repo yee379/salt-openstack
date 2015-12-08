@@ -6,6 +6,8 @@ openstack:
 {% for state in minion_states %}
     - {{ state }}
 {% endfor %}
+{% if pillar.get('splunkforwarder') %}
     - splunk
+{% endif %}
     
 {% endif %}
