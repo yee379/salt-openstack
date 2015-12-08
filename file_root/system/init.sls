@@ -3,6 +3,9 @@
 
 include:
   - system.{{ grains['os'] }}
+{% if grains['os'] == 'CentOS' %}
+  - system.{{ grains['os'] }}.iptables
+{% endif %}
 {% if salt['openstack_utils.boolean_value'](openstack_parameters['system_upgrade']) %}
   - system.upgrade
 {% endif %}
