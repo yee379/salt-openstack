@@ -60,7 +60,7 @@ openvswitch_promisc_interfaces_enable:
 openvswitch_br-proxy_network_script:
   ini.options_present:
     - name: "{{ openvswitch['conf']['network_scripts'] }}/ifcfg-br-proxy"
-    - unless: "ls {{ openvswitch['conf']['network_scripts'] }}/ifcfg-br-proxy"
+    # - unless: "ls {{ openvswitch['conf']['network_scripts'] }}/ifcfg-br-proxy"
     - sections:
         DEFAULT_IMPLICIT:
           DEVICE: br-proxy
@@ -91,8 +91,10 @@ openvswitch_{{ neutron['single_nic']['interface'] }}_ovs_port_network_script:
 
 
 {% set index = 1 %}
+{% set veth_indexes = [] %}
 {% for bridge in neutron['bridges'] %}
   {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'], 'br-proxy' ] %}
+  {% do veth_indexes.append( index ) %}
 openvswitch_veth-proxy-{{ index }}_ovs_port_network_script:
   file.managed:
     - name: "{{ openvswitch['conf']['network_scripts'] }}/ifcfg-veth-proxy-{{ index }}"
@@ -111,4 +113,13 @@ openvswitch_veth-proxy-{{ index }}_ovs_port_network_script:
       - ini: openvswitch_br-proxy_network_script
   {% endif %}
   {% set index = index + 1 %}
+{% endfor %}
+
+restart network service with new br-proxy:
+  service.running:
+    - name: network
+    - watch:
+      - file: openvswitch_{{ neutron['single_nic']['interface'] }}_ovs_port_network_script
+{% for index in veth_indexes %}
+      - file: openvswitch_veth-proxy-{{ index }}_ovs_port_network_script
 {% endfor %}
