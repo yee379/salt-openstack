@@ -1,0 +1,134 @@
+neutron:
+  
+  integration_bridge: br-int
+  external_bridge: br-ex
+
+  # TODO: need to be able to have different configs per host, eg networking server needs lacp etc.
+  single_nic:
+    enable: True
+    interface: eth1
+    # lacp: True
+    # interfaces:
+    #   - em1
+    #   - em2
+    # set_up_script: "/root/br-proxy.sh"
+
+  type_drivers:
+
+    vlan:
+     physnets:
+        farm10-os-grid:
+          bridge: br-proxy
+          vlan_range: "238:238"
+          hosts:
+            controller.local: ~
+
+    flat: 
+      physnets: 
+        farm10-openstack-mgmt: 
+          bridge: br-ex
+          hosts:
+            controller.local: ~
+
+    vxlan:
+      physnets:
+        farm10-vxlannet:
+          bridge: br-tun
+          hosts:
+            controller.local: ~
+      vxlan_group: 66666
+      tunnels:
+        tun0:
+          vni_range: "60000:90000"
+
+  tunneling:
+    enable: True
+    types:
+      - vxlan
+    bridge: br-tun
+
+  networks: {}
+
+    # # management network for openstack servers and services
+    # FARM10-OPENSTACK-MGMT:
+    #   user: admin
+    #   tenant: admin
+    #   provider_physical_network: farm10-openstack-mgmt
+    #   provider_network_type: flat
+    #   shared: False
+    #   admin_state_up: True
+    #   router_external: True
+    #   subnets:
+    #     FARM10-OPENSTACK-MGMT:
+    #       cidr: 172.23.99.192/26
+    #       allocation_pools:
+    #         - start: 172.23.99.220
+    #           end: 172.23.99.253
+    #       enable_dhcp: False
+    #       dns_nameservers:
+    #         - 134.79.111.111
+    #         - 134.79.111.112
+    #
+    # # tenant network for grid
+    # FARM10-OS-GRID:
+    #   user: admin
+    #   tenant: admin
+    #   provider_physical_network: farm10-os-grid
+    #   provider_network_type: vlan
+    #   shared: True
+    #   admin_state_up: True
+    #   router_external: True
+    #   subnets:
+    #     FARM10-OS-GRID:
+    #       cidr: 134.79.238.0/23
+    #       allocation_pools:
+    #         - start: 134.79.238.10
+    #           end: 134.79.238.253
+    #       enable_dhcp: True
+    #       dns_nameservers:
+    #         - 134.79.111.111
+    #         - 134.79.111.112
+    #
+    # # tenant network for general
+    # FARM10-VXLANNET:
+    #   user: admin
+    #   tenant: admin
+    #   # not for vxlan
+    #   # provider_physical_network: vxlannet
+    #   provider_network_type: vxlan
+    #   shared: True
+    #   admin_state_up: True
+    #   router_external: False
+    #   subnets:
+    #     FARM10-VXLANNET:
+    #       cidr: 10.0.0.0/24
+    #       allocation_pools:
+    #         - start: 10.0.0.10
+    #           end: 10.0.0.254
+    #       enable_dhcp: True
+    #       dns_nameservers:
+    #         - 134.79.111.111
+    #         - 134.79.111.112
+
+  routers: {}
+
+    # rtr-os-ctrl01:
+    #   user: admin
+    #   tenant: admin
+    #   gateway_network: FARM10-OPENSTACK-MGMT
+    #   interfaces:
+    #     - FARM10-VXLANNET
+
+  security_groups:
+    default:
+      user: admin
+      tenant: admin
+      description: allow everything
+      rules: 
+        []
+        # - direction: "<egress/ingress>"
+        #   ethertype: "<IPv4/IPv6>"
+        #   protocol: "<icmp/tcp/udp>"
+        #   port_range_min: "<start_port>"
+        #   port_range_max: "<end_port>"
+        #   remote_ip_prefix: "<cidr>"
