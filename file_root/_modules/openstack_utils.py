@@ -5,47 +5,84 @@ LOG = logging.getLogger(__name__)
 from os.path import isfile
 
 def _keystone_services():
-    return {'keystone': {'description': 'Openstack Identity',
-                         'endpoint': {'adminurl': 'http://{0}:35357/v2.0',
-                                      'internalurl': 'http://{0}:5000/v2.0',
-                                      'publicurl': 'http://{0}:5000/v2.0'},
-                         'service_type': 'identity'},
-            'glance': {'description': 'OpenStack Image service',
-                       'endpoint': {'adminurl': 'http://{0}:9292',
-                                    'internalurl': 'http://{0}:9292',
-                                    'publicurl': 'http://{0}:9292'},
-                       'service_type': 'image'},
-            'nova': {'description': 'nova compute service',
-                     'endpoint': {'adminurl': 'http://{0}:8774/v2/%(tenant_id)s',
-                                  'internalurl': 'http://{0}:8774/v2/%(tenant_id)s',
-                                  'publicurl': 'http://{0}:8774/v2/%(tenant_id)s'},
-                     'service_type': 'compute'},
-            'neutron': {'description': 'OpenStack Networking',
-                        'endpoint': {'adminurl': 'http://{0}:9696',
-                                     'internalurl': 'http://{0}:9696',
-                                     'publicurl': 'http://{0}:9696'},
-                        'service_type': 'network'},
-            'cinder': {'description': 'OpenStack Block Storage',
-                       'endpoint': {'adminurl': 'http://{0}:8776/v1/%(tenant_id)s',
-                                    'internalurl': 'http://{0}:8776/v1/%(tenant_id)s',
-                                    'publicurl': 'http://{0}:8776/v1/%(tenant_id)s'},
-                       'service_type': 'volume'},
-            'cinderv2': {'description': 'OpenStack Block Storage V2',
-                       'endpoint': {'adminurl': 'http://{0}:8776/v2/%(tenant_id)s',
-                                    'internalurl': 'http://{0}:8776/v2/%(tenant_id)s',
-                                    'publicurl': 'http://{0}:8776/v2/%(tenant_id)s'},
-                       'service_type': 'volumev2'},
-            'heat': {'description': 'Openstack Orchestration Service',
-                     'endpoint': {'adminurl': 'http://{0}:8004/v1/%(tenant_id)s',
-                                  'internalurl': 'http://{0}:8004/v1/%(tenant_id)s',
-                                  'publicurl': 'http://{0}:8004/v1/%(tenant_id)s'},
-                     'service_type': 'orchestration'},
-            'heat-cfn': {'description': 'Orchestration CloudFormation',
-                         'endpoint': {'adminurl': 'http://{0}:8000/v1',
-                                      'internalurl': 'http://{0}:8000/v1',
-                                      'publicurl': 'http://{0}:8000/v1'},
-                         'service_type': 'cloudformation'}}
+    # returns all openstack services with endpoint base on pillar services
+    services = {}
+    controller = __salt__['pillar.get']('controller')
+    fqdn = __salt__['pillar.get']( 'hosts:%s' % (controller,) )
+    for s, d in __salt__['pillar.get']('services', default={}).iteritems():
+        if 'service_type' in d:
+            services[s] = {
+                'service_type': d['service_type'],
+                'description': d['description'],
+                'endpoint': {
+                    'internalurl': _service_endpoint( d, fqdn, 'internal' ),
+                    'publicurl': _service_endpoint( d, fqdn, 'public' ),
+                    'adminurl': _service_endpoint( d, fqdn, 'admin' ),
+                }
+            }
+            if 'version' in d:
+                services[s]['version'] = d['version']
+    # fall back
+    if services == {}:
+        return {'keystone': {'description': 'Openstack Identity',
+                             'endpoint': {'adminurl': 'http://{0}:35357/v2.0',
+                                          'internalurl': 'http://{0}:5000/v2.0',
+                                          'publicurl': 'http://{0}:5000/v2.0'},
+                             'service_type': 'identity'},
+                'glance': {'description': 'OpenStack Image service',
+                           'endpoint': {'adminurl': 'http://{0}:9292',
+                                        'internalurl': 'http://{0}:9292',
+                                        'publicurl': 'http://{0}:9292'},
+                           'service_type': 'image'},
+                'nova': {'description': 'nova compute service',
+                         'endpoint': {'adminurl': 'http://{0}:8774/v2/%(tenant_id)s',
+                                      'internalurl': 'http://{0}:8774/v2/%(tenant_id)s',
+                                      'publicurl': 'http://{0}:8774/v2/%(tenant_id)s'},
+                         'service_type': 'compute'},
+                'neutron': {'description': 'OpenStack Networking',
+                            'endpoint': {'adminurl': 'http://{0}:9696',
+                                         'internalurl': 'http://{0}:9696',
+                                         'publicurl': 'http://{0}:9696'},
+                            'service_type': 'network'},
+                'cinder': {'description': 'OpenStack Block Storage',
+                           'endpoint': {'adminurl': 'http://{0}:8776/v1/%(tenant_id)s',
+                                        'internalurl': 'http://{0}:8776/v1/%(tenant_id)s',
+                                        'publicurl': 'http://{0}:8776/v1/%(tenant_id)s'},
+                           'service_type': 'volume'},
+                'cinderv2': {'description': 'OpenStack Block Storage V2',
+                           'endpoint': {'adminurl': 'http://{0}:8776/v2/%(tenant_id)s',
+                                        'internalurl': 'http://{0}:8776/v2/%(tenant_id)s',
+                                        'publicurl': 'http://{0}:8776/v2/%(tenant_id)s'},
+                           'service_type': 'volumev2'},
+                'heat': {'description': 'Openstack Orchestration Service',
+                         'endpoint': {'adminurl': 'http://{0}:8004/v1/%(tenant_id)s',
+                                      'internalurl': 'http://{0}:8004/v1/%(tenant_id)s',
+                                      'publicurl': 'http://{0}:8004/v1/%(tenant_id)s'},
+                         'service_type': 'orchestration'},
+                'heat-cfn': {'description': 'Orchestration CloudFormation',
+                             'endpoint': {'adminurl': 'http://{0}:8000/v1',
+                                          'internalurl': 'http://{0}:8000/v1',
+                                          'publicurl': 'http://{0}:8000/v1'},
+                             'service_type': 'cloudformation'}}
+    return services
 
+def _service_endpoint( service, fqdn, zone, local_or_service='service' ):
+    # uses the services pillar to determine the uri's for openstack services
+    d = service['url'][zone]
+    # if we have https, then spit out the service_port
+    # we enforce that all openstack services listen on localhost bounded ports and that a ssl proxy 
+    # is used in front of the service
+    if 'https' in d and d['https']:
+        proto = 'https'
+        local_or_service = 'local'
+    else:
+        proto = 'http'
+    return '%s://%s:%s%s' % ( 
+        proto,
+        fqdn, 
+        d['local_port'] if local_or_service == 'local' else d['service_port'],
+        '/%s'%(d['path'],) if 'path' in d else ''
+    )
 
 def _openstack_service_context(openstack_service):
     series = openstack_series()
