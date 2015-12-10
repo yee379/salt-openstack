@@ -57,10 +57,10 @@ keystone_virtual_host_conf:
   file.managed:
     - name: {{ keystone['files']['wsgi_conf'] }}
     - contents: |
-        Listen 5000
-        Listen 35357
+        Listen {{ salt['pillar.get']( 'services:keystone:url:internal:service_port', 5000 ) }}
+        Listen {{ salt['pillar.get']( 'services:keystone:url:admin:service_port', 35357 ) }}
 
-        <VirtualHost *:5000>
+        <VirtualHost *:{{ salt['pillar.get']( 'services:keystone:url:internal:service_port', 5000 ) }}>
             WSGIDaemonProcess keystone-public processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
             WSGIProcessGroup keystone-public
             WSGIScriptAlias / {{ keystone['files']['www'] }}/main
@@ -72,7 +72,7 @@ keystone_virtual_host_conf:
             CustomLog /var/log/httpd/keystone-access.log combined
         </VirtualHost>
 
-        <VirtualHost *:35357>
+        <VirtualHost *:{{ salt['pillar.get']( 'services:keystone:url:admin:service_port', 35357 ) }}>
             WSGIDaemonProcess keystone-admin processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
             WSGIProcessGroup keystone-admin
             WSGIScriptAlias / {{ keystone['files']['www'] }}/admin
