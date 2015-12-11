@@ -8,18 +8,6 @@ archive {{ glance['conf']['api'] }}:
     - source: {{ glance['conf']['api'] }}
     - unless: ls {{ glance['conf']['api'] }}.orig
     
-glance_api_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ glance['conf']['api'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-      - file: archive {{ glance['conf']['api'] }}
-{% for pkg in glance['packages'] %}
-      - pkg: glance_{{ pkg }}_install
-{% endfor %}
-
-
 glance_api_conf:
   ini.options_present:
     - name: "{{ glance['conf']['api'] }}"
@@ -45,17 +33,9 @@ glance_api_conf:
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
     - require:
-      - ini: glance_api_conf_keystone_authtoken
-
-
-glance_registry_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ glance['conf']['registry'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
+        - file: archive {{ glance['conf']['api'] }}
 {% for pkg in glance['packages'] %}
-      - pkg: glance_{{ pkg }}_install
+        - pkg: glance_{{ pkg }}_install
 {% endfor %}
 
 
@@ -81,7 +61,9 @@ glance_registry_conf:
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
     - require:
-      - ini: glance_registry_conf_keystone_authtoken
+{% for pkg in glance['packages'] %}
+        - pkg: glance_{{ pkg }}_install
+{% endfor %}
 
 
 glance_db_sync:

@@ -20,16 +20,6 @@ archive {{ cinder['conf']['cinder'] }}:
     - source: {{ cinder['conf']['cinder'] }}
     - unless: ls {{ cinder['conf']['cinder'] }}.orig
     
-cinder_controller_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ cinder['conf']['cinder'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-      - file: archive {{ cinder['conf']['cinder'] }}
-      - file: cinder_conf_create
-
-
 cinder_controller_conf:
   ini.options_present:
     - name: "{{ cinder['conf']['cinder'] }}"
@@ -53,8 +43,8 @@ cinder_controller_conf:
         oslo_concurrency:
           lock_path: "{{ cinder['files']['lock'] }}"
     - require:
-      - ini: cinder_controller_conf_keystone_authtoken
-
+      - file: archive {{ cinder['conf']['cinder'] }}
+      - file: cinder_conf_create
 
 cinder_db_sync:
   cmd.run:

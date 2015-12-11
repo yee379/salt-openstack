@@ -24,18 +24,6 @@ archive {{ neutron['conf']['neutron'] }} compute:
     - source: {{ neutron['conf']['neutron'] }}
     - unless: ls {{ neutron['conf']['neutron'] }}.orig
 
-neutron_compute_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ neutron['conf']['neutron'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-      - file: archive {{ neutron['conf']['neutron'] }} compute
-{% for pkg in neutron['packages']['compute']['kvm'] %}
-      - pkg: neutron_compute_{{ pkg }}_install
-{% endfor %}
-
-
 neutron_compute_conf:
   ini.options_present:
     - name: "{{ neutron['conf']['neutron'] }}"
@@ -57,7 +45,10 @@ neutron_compute_conf:
           username: "neutron"
           password: "{{ service_users['neutron']['password'] }}"
     - require: 
-      - ini: neutron_compute_conf_keystone_authtoken
+        - file: archive {{ neutron['conf']['neutron'] }} compute
+{% for pkg in neutron['packages']['compute']['kvm'] %}
+        - pkg: neutron_compute_{{ pkg }}_install
+{% endfor %}
 
 
 neutron_compute_ml2_conf:

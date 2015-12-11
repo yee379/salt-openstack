@@ -3,17 +3,6 @@
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 
 
-cinder_storage_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ cinder['conf']['cinder'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-{% for pkg in cinder['packages']['storage'] %}
-      - pkg: cinder_storage_{{ pkg }}_install
-{% endfor %}
-
-
 cinder_storage_conf:
   ini.options_present:
     - name: "{{ cinder['conf']['cinder'] }}"
@@ -44,7 +33,9 @@ cinder_storage_conf:
         oslo_concurrency:
           lock_path: "{{ cinder['files']['lock'] }}"
     - require:
-      - ini: cinder_storage_conf_keystone_authtoken
+{% for pkg in cinder['packages']['storage'] %}
+        - pkg: cinder_storage_{{ pkg }}_install
+{% endfor %}
 
 
 {% for service in cinder['services']['storage'] %}

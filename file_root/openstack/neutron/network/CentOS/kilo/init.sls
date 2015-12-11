@@ -19,18 +19,6 @@ neutron_network_ipv4_forwarding_enable:
     - require:
       - ini: neutron_network_ipv4_forwarding_conf
 
-
-neutron_network_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ neutron['conf']['neutron'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-{% for pkg in neutron['packages']['network'] %}
-      - pkg: neutron_network_{{ pkg }}_install
-{% endfor %}
-
-
 neutron_network_conf:
   ini.options_present:
     - name: "{{ neutron['conf']['neutron'] }}"
@@ -52,7 +40,9 @@ neutron_network_conf:
           username: "neutron"
           password: "{{ service_users['neutron']['password'] }}"
     - require: 
-      - ini: neutron_network_conf_keystone_authtoken
+{% for pkg in neutron['packages']['network'] %}
+        - pkg: neutron_network_{{ pkg }}_install
+{% endfor %}
 
 
 neutron_network_ml2_conf:

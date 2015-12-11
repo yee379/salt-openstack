@@ -8,18 +8,6 @@ archive {{ nova['conf']['nova'] }} compute:
     - source: {{ nova['conf']['nova'] }} 
     - unless: ls {{ nova['conf']['nova'] }}.orig
 
-nova_compute_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ nova['conf']['nova'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-      - file: archive {{ nova['conf']['nova'] }} compute
-{% for pkg in nova['packages']['compute']['kvm'] %}
-      - pkg: nova_compute_{{ pkg }}_install
-{% endfor %}
-
-
 {% set minion_ip = salt['openstack_utils.minion_ip'](grains['id']) %}
 nova_compute_conf:
   ini.options_present:
@@ -61,7 +49,10 @@ nova_compute_conf:
         libvirt:
           virt_type: {{ nova['libvirt_virt_type'] }}
     - require:
-      - ini: nova_compute_conf_keystone_authtoken
+        - file: archive {{ nova['conf']['nova'] }} compute
+{% for pkg in nova['packages']['compute']['kvm'] %}
+        - pkg: nova_compute_{{ pkg }}_install
+{% endfor %}
 
 
 {% for service in nova['services']['compute']['kvm'] %}

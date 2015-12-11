@@ -8,18 +8,6 @@ archive {{ neutron['conf']['neutron'] }} controller:
     - source: {{ neutron['conf']['neutron'] }}
     - unless: ls {{ neutron['conf']['neutron'] }}.orig
 
-neutron_controller_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ neutron['conf']['neutron'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-      - file: archive {{ neutron['conf']['neutron'] }} controller
-{% for pkg in neutron['packages']['controller'] %}
-      - pkg: neutron_controller_{{ pkg }}_install
-{% endfor %}
-
-
 neutron_controller_conf:
   ini.options_present:
     - name: "{{ neutron['conf']['neutron'] }}"
@@ -55,7 +43,10 @@ neutron_controller_conf:
           username: nova
           password: "{{ service_users['nova']['password'] }}"
     - require:
-      - ini: neutron_controller_conf_keystone_authtoken
+        - file: archive {{ neutron['conf']['neutron'] }} controller
+{% for pkg in neutron['packages']['controller'] %}
+        - pkg: neutron_controller_{{ pkg }}_install
+{% endfor %}
 
 
 neutron_controller_ml2_conf:

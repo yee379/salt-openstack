@@ -9,18 +9,6 @@ archive {{ nova['conf']['nova'] }} controller:
     - source: {{ nova['conf']['nova'] }} 
     - unless: ls {{ nova['conf']['nova'] }}.orig
 
-nova_controller_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ nova['conf']['nova'] }}"
-    - sections:
-        - keystone_authtoken
-    - require:
-      - file: archive {{ nova['conf']['nova'] }} controller
-{% for pkg in nova['packages']['controller'] %}
-      - pkg: nova_controller_{{ pkg }}_install
-{% endfor %}
-
-
 nova_controller_conf:
   ini.options_present:
     - name: "{{ nova['conf']['nova'] }}"
@@ -63,7 +51,10 @@ nova_controller_conf:
           admin_username: neutron
           admin_password: "{{ service_users['neutron']['password'] }}"
     - require:
-      - ini: nova_controller_conf_keystone_authtoken
+        - file: archive {{ nova['conf']['nova'] }} controller
+{% for pkg in nova['packages']['controller'] %}
+        - pkg: nova_controller_{{ pkg }}_install
+{% endfor %}
 
 
 nova_db_sync:
