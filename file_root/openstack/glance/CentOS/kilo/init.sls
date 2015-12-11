@@ -2,13 +2,19 @@
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 
-
+archive {{ glance['conf']['api'] }}:
+  file.copy:
+    - name: {{ glance['conf']['api'] }}.orig
+    - source: {{ glance['conf']['api'] }}
+    - unless: ls {{ glance['conf']['api'] }}.orig
+    
 glance_api_conf_keystone_authtoken:
   ini.sections_absent:
     - name: "{{ glance['conf']['api'] }}"
     - sections:
       - keystone_authtoken
     - require:
+      - file: archive {{ glance['conf']['api'] }}
 {% for pkg in glance['packages'] %}
       - pkg: glance_{{ pkg }}_install
 {% endfor %}

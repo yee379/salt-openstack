@@ -3,6 +3,11 @@
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 
+archive {{ nova['conf']['nova'] }} controller:
+  file.copy:
+    - name: {{ nova['conf']['nova'] }}.orig
+    - source: {{ nova['conf']['nova'] }} 
+    - unless: ls {{ nova['conf']['nova'] }}.orig
 
 nova_controller_conf_keystone_authtoken:
   ini.sections_absent:
@@ -10,6 +15,7 @@ nova_controller_conf_keystone_authtoken:
     - sections:
         - keystone_authtoken
     - require:
+      - file: archive {{ nova['conf']['nova'] }} controller
 {% for pkg in nova['packages']['controller'] %}
       - pkg: nova_controller_{{ pkg }}_install
 {% endfor %}

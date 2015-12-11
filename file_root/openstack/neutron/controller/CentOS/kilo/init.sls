@@ -2,6 +2,11 @@
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 
+archive {{ neutron['conf']['neutron'] }} controller:
+  file.copy:
+    - name: {{ neutron['conf']['neutron'] }}.orig
+    - source: {{ neutron['conf']['neutron'] }}
+    - unless: ls {{ neutron['conf']['neutron'] }}.orig
 
 neutron_controller_conf_keystone_authtoken:
   ini.sections_absent:
@@ -9,6 +14,7 @@ neutron_controller_conf_keystone_authtoken:
     - sections:
       - keystone_authtoken
     - require:
+      - file: archive {{ neutron['conf']['neutron'] }} controller
 {% for pkg in neutron['packages']['controller'] %}
       - pkg: neutron_controller_{{ pkg }}_install
 {% endfor %}

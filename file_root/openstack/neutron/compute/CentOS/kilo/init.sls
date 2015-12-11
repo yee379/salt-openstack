@@ -18,6 +18,11 @@ neutron_compute_sysctl_enable:
     - require:
       - ini: neutron_compute_sysctl_conf
 
+archive {{ neutron['conf']['neutron'] }} compute:
+  file.copy:
+    - name: {{ neutron['conf']['neutron'] }}.orig
+    - source: {{ neutron['conf']['neutron'] }}
+    - unless: ls {{ neutron['conf']['neutron'] }}.orig
 
 neutron_compute_conf_keystone_authtoken:
   ini.sections_absent:
@@ -25,6 +30,7 @@ neutron_compute_conf_keystone_authtoken:
     - sections:
       - keystone_authtoken
     - require:
+      - file: archive {{ neutron['conf']['neutron'] }} compute
 {% for pkg in neutron['packages']['compute']['kvm'] %}
       - pkg: neutron_compute_{{ pkg }}_install
 {% endfor %}

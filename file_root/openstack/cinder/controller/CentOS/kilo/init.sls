@@ -14,13 +14,19 @@ cinder_conf_create:
       - pkg: cinder_controller_{{ pkg }}_install
 {% endfor %}
 
-
+archive {{ cinder['conf']['cinder'] }}:
+  file.copy:
+    - name: {{ cinder['conf']['cinder'] }}.orig
+    - source: {{ cinder['conf']['cinder'] }}
+    - unless: ls {{ cinder['conf']['cinder'] }}.orig
+    
 cinder_controller_conf_keystone_authtoken:
   ini.sections_absent:
     - name: "{{ cinder['conf']['cinder'] }}"
     - sections:
       - keystone_authtoken
     - require:
+      - file: archive {{ cinder['conf']['cinder'] }}
       - file: cinder_conf_create
 
 

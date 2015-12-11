@@ -11,6 +11,11 @@ keystone_service_memcache_running:
       - pkg: keystone_{{ pkg }}_install
 {% endfor %}
 
+archive {{ keystone['conf']['keystone'] }}:
+  file.copy:
+    - name: {{ keystone['conf']['keystone'] }}.orig
+    - source: {{ keystone['conf']['keystone'] }}
+    - unless: ls {{ keystone['conf']['keystone'] }}.orig
 
 keystone_conf:
   ini.options_present:
@@ -30,6 +35,7 @@ keystone_conf:
         revoke:
           driver: "keystone.contrib.revoke.backends.sql.Revoke"
     - require:
+      - file: archive {{ keystone['conf']['keystone'] }}
 {% for pkg in keystone['packages'] %}
       - pkg: keystone_{{ pkg }}_install
 {% endfor %}
