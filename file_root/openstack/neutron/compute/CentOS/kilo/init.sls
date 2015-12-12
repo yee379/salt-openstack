@@ -1,7 +1,7 @@
 {% set neutron = salt['openstack_utils.neutron']() %}
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
-
+{% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
 neutron_compute_sysctl_conf:
   ini.options_present:
@@ -36,8 +36,8 @@ neutron_compute_conf:
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
         keystone_authtoken: 
-          auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000"
-          auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357"
+          auth_uri: {{ keystone_auth['public'] }}
+          auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"

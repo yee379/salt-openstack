@@ -66,7 +66,7 @@ def _keystone_services():
                              'service_type': 'cloudformation'}}
     return services
 
-def _service_endpoint( service, fqdn, zone, local_or_service='service' ):
+def _service_endpoint( service, fqdn, zone, local_or_service='service', include_path=True ):
     # uses the services pillar to determine the uri's for openstack services
     d = service['url'][zone]
     # if we have https, then spit out the service_port
@@ -81,8 +81,25 @@ def _service_endpoint( service, fqdn, zone, local_or_service='service' ):
         proto,
         fqdn, 
         d['local_port'] if local_or_service == 'local' else d['service_port'],
-        '/%s'%(d['path'],) if 'path' in d else ''
+        '/%s'%(d['path'],) if include_path and 'path' in d else ''
     )
+
+def controller( by_ip=False ):
+    # TODO: support HA
+    c = __salt__['pillar.get']('controller')
+    if by_ip:
+        c = minion_ip( c )
+    return c
+
+def keystone_auth( by_ip=False ):
+    ks = __salt__['pillar.get']('services')['keystone']
+    c = controller( by_ip=by_ip )
+    context = {}
+    for z,d in ks['url'].iteritems():
+        context[z] = _service_endpoint( ks, c, z, local_or_service='service', include_path=False )
+        context['%s_with_path'%(z,)] = _service_endpoint( ks, c, z, local_or_service='service', include_path=True )
+    return context
+
 
 def _openstack_service_context(openstack_service):
     series = openstack_series()

@@ -3,7 +3,7 @@
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 {% set keystone = salt['openstack_utils.keystone']() %}
 {% set admin_users = salt['openstack_utils.openstack_users']('admin') %}
-
+{% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
 heat_conf_create:
   file.copy:
@@ -32,13 +32,16 @@ heat_conf:
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
         keystone_authtoken:
-          auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000/v2.0"
-          identity_uri: "http://{{ openstack_parameters['controller_ip'] }}:35357"
+          # auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000/v2.0"
+          # identity_uri: "http://{{ openstack_parameters['controller_ip'] }}:35357"
+          auth_uri: {{ keystone_auth['public_with_path'] }}
+          identity_uri: {{ keystone_auth['admin'] }}
           admin_tenant_name: service
           admin_user: heat
           admin_password: {{ service_users['heat']['password'] }}
         ec2authtoken:
-          auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000/v2.0"
+          # auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000/v2.0"
+          auth_uri: {{ keystone_auth['public_with_path'] }}
     - require:
 {% for pkg in heat['packages'] %}
       - pkg: heat_{{ pkg }}_install

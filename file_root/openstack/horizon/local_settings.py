@@ -51,7 +51,7 @@ LOGIN_REDIRECT_URL='/dashboard'
 COMPRESS_OFFLINE = True
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 OPENSTACK_HOST = "{{ controller_ip }}"
-OPENSTACK_KEYSTONE_URL = "http://%s:5000/v2.0" % OPENSTACK_HOST
+OPENSTACK_KEYSTONE_URL = "{{ keystone_url }}"
 OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"
 OPENSTACK_KEYSTONE_BACKEND = {
     'name': 'native',

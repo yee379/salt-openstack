@@ -1,6 +1,7 @@
 {% set neutron = salt['openstack_utils.neutron']() %}
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
+{% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
 archive {{ neutron['conf']['neutron'] }} controller:
   file.copy:
@@ -25,8 +26,8 @@ neutron_controller_conf:
           notify_nova_on_port_data_changes: True
           nova_url: "http://{{ openstack_parameters['controller_ip'] }}:8774/v2"
         keystone_authtoken: 
-          auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000"
-          auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357"
+          auth_uri: {{ keystone_auth['public'] }}
+          auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
@@ -34,7 +35,7 @@ neutron_controller_conf:
           username: "neutron"
           password: "{{ service_users['neutron']['password'] }}"
         nova:
-          auth_url: http://{{ openstack_parameters['controller_ip'] }}:35357
+          auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: password
           project_domain_id: default
           user_domain_id: default
