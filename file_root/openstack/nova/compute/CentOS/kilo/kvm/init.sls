@@ -43,7 +43,7 @@ nova_compute_conf:
         neutron:
           url: {{ salt['openstack_utils.service_urls']( 'neutron', by_ip=True )['public'] }}
           auth_strategy: keystone
-          admin_auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357/v2.0"
+          admin_auth_url: {{ salt['openstack_utils.service_urls']( 'keystone', by_ip=True )['admin_with_version'] }}
           admin_tenant_name: service
           admin_username: neutron
           admin_password: "{{ service_users['neutron']['password'] }}"
