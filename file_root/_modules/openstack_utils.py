@@ -66,7 +66,7 @@ def _keystone_services():
                              'service_type': 'cloudformation'}}
     return services
 
-def _service_endpoint( service, fqdn, zone, local_or_service='service', include_path=True ):
+def _service_endpoint( service, fqdn, zone, local_or_service='service', include_path=True, path_is_version=False ):
     # uses the services pillar to determine the uri's for openstack services
     d = service['url'][zone]
     # if we have https, then spit out the service_port
@@ -77,12 +77,18 @@ def _service_endpoint( service, fqdn, zone, local_or_service='service', include_
         local_or_service = 'local'
     else:
         proto = 'http'
+    # set path
+    path = ''
+    if not path_is_version and include_path and 'path' in d:
+        path = '/'+d['path']
+    elif path_is_version:
+        path = '/'+service['version']
     return '%s://%s:%s%s' % ( 
-        proto,
-        fqdn, 
-        d['local_port'] if local_or_service == 'local' else d['service_port'],
-        '/%s'%(d['path'],) if include_path and 'path' in d else ''
-    )
+            proto,
+            fqdn, 
+            d['local_port'] if local_or_service == 'local' else d['service_port'],
+            path
+        )
 
 def controller( by_ip=False ):
     # TODO: support HA
@@ -100,6 +106,15 @@ def keystone_auth( by_ip=False ):
         context['%s_with_path'%(z,)] = _service_endpoint( ks, c, z, local_or_service='service', include_path=True )
     return context
 
+def nova_service_url( fqdn=controller, by_ip=False ):
+    # "http://{{ openstack_parameters['controller_ip'] }}:8774/v2"
+    nova = __salt__['pillar.get']('services')['nova']
+    if hasattr(fqdn,'__call__'):
+        fqdn = fqdn( by_ip=by_ip )
+    context = {}
+    for z,d in nova['url'].iteritems():
+        context['%s_with_path'%(z,)] = _service_endpoint( nova, fqdn, z, local_or_service='service', include_path=True, path_is_version=True )
+    return context
 
 def _openstack_service_context(openstack_service):
     series = openstack_series()

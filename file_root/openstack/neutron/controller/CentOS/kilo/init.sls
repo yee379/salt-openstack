@@ -24,7 +24,7 @@ neutron_controller_conf:
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           notify_nova_on_port_status_changes: True
           notify_nova_on_port_data_changes: True
-          nova_url: "http://{{ openstack_parameters['controller_ip'] }}:8774/v2"
+          nova_url: {{ salt['openstack_utils.nova_service_url']( by_ip=True )['public_with_path'] }}
         keystone_authtoken: 
           auth_uri: {{ keystone_auth['public'] }}
           auth_url: {{ keystone_auth['admin'] }}
