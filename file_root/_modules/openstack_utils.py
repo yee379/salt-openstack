@@ -105,16 +105,6 @@ def keystone_auth( by_ip=False ):
         context[z] = _service_endpoint( ks, c, z, local_or_service='service', include_path=False )
         context['%s_with_path'%(z,)] = _service_endpoint( ks, c, z, local_or_service='service', include_path=True )
     return context
-
-def nova_service_url( fqdn=controller, by_ip=False ):
-    # "http://{{ openstack_parameters['controller_ip'] }}:8774/v2"
-    nova = __salt__['pillar.get']('services')['nova']
-    if hasattr(fqdn,'__call__'):
-        fqdn = fqdn( by_ip=by_ip )
-    context = {}
-    for z,d in nova['url'].iteritems():
-        context['%s_with_path'%(z,)] = _service_endpoint( nova, fqdn, z, local_or_service='service', include_path=True, path_is_version=True )
-    return context
     
 def service_urls( service, fqdn=controller, by_ip=False ):
     s = __salt__['pillar.get']('services')[service]
