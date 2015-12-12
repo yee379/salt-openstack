@@ -20,7 +20,7 @@ nova_compute_conf:
           vnc_enabled: True
           vncserver_listen: 0.0.0.0
           vncserver_proxyclient_address: {{ minion_ip }}
-          novncproxy_base_url: "http://{{ openstack_parameters['controller_name'] }}:6080/vnc_auto.html"
+          novncproxy_base_url: {{ salt['openstack_utils.service_urls']( 'novnc', by_ip=False )['public_with_path'] }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           network_api_class: nova.network.neutronv2.api.API

@@ -10,10 +10,11 @@ open openstack node {{ host }} on firewall:
     - unless: iptables -C INPUT -s {{ host_ip }} -m state --state NEW -j ACCEPT
 {% endfor %}
 
+{% set novnc_port = salt['pillar.get']('services:novnc:url:public:service_port', 6080 ) %}
 open novnc on firewall:
   cmd.run:
-    - name: iptables -I INPUT {{ count + 1 }} -t filter -m state --state NEW -p tcp --dport 6080 -j ACCEPT && service iptables save && true
-    - unless: iptables -C INPUT -m state --state NEW -p tcp --dport 6080 -j ACCEPT
+    - name: iptables -I INPUT {{ count + 1 }} -t filter -m state --state NEW -p tcp --dport {{ novnc_port }} -j ACCEPT && service iptables save && true
+    - unless: iptables -C INPUT -m state --state NEW -p tcp --dport {{ novnc_port }} -j ACCEPT
 
 {% if grains['id'] in salt['pillar.get']('controller',[]) %}
 
