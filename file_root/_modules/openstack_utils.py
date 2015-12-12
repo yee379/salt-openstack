@@ -697,6 +697,11 @@ def openvswitch():
 def horizon():
     return __salt__['pillar.get']('resources:horizon')
 
+def horizon_https():
+    for z,d in __salt__['pillar.get']('services')['horizon']['url'].iteritems():
+        if 'https' in d and d['https']:
+            return True
+    return False
 
 def cinder():
     context = _openstack_service_context('cinder')
@@ -715,3 +720,17 @@ def cinder():
 
 def heat():
     return _openstack_service_context('heat')
+
+def haproxy_services( ):
+    for s, d in __salt__['pillar.get']('services').iteritems():
+        # work out if we have different port numbers like with keystone
+        ports = []
+        for z,data in d['url'].iteritems():
+            if not 'https' in data:
+                data['https'] = False
+            # only bother proxying if the ports are different
+            if not data['local_port'] == data['service_port'] \
+                and not data in ports: # if port spec has not already been seen
+                    ports.append( data )
+        for p in ports:
+            yield '%s-%s'%(s,p['service_port']), p['local_port'], p['service_port'], p['https']

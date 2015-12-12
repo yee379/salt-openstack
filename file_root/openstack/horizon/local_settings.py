@@ -10,6 +10,7 @@ TEMPLATE_DEBUG = DEBUG
 {% if https %}
 # as per http://docs.openstack.org/developer/horizon/topics/deployment.html#secure-site-recommendations
 USE_SSL = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
 CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
@@ -34,8 +35,9 @@ HORIZON_CONFIG = {
     'angular_modules': [],
     'js_files': [],
     'js_spec_files': [],
+    #  as per http://docs.openstack.org/security-guide/dashboard/checklist.html
     'password_autocomplete': 'off',
-    # disable_password_reveal as per http://docs.openstack.org/security-guide/dashboard/checklist.html
+    'disable_password_reveal': False,
 }
 LOCAL_PATH = os.path.dirname(os.path.abspath(__file__))
 SECRET_KEY='{{ secret_key }}'
@@ -50,6 +52,8 @@ LOGOUT_URL='/dashboard/auth/logout/'
 LOGIN_REDIRECT_URL='/dashboard'
 COMPRESS_OFFLINE = True
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+LAUNCH_INSTANCE_LEGACY_ENABLED = True
+LAUNCH_INSTANCE_NG_ENABLED = False
 OPENSTACK_HOST = "{{ controller_ip }}"
 OPENSTACK_KEYSTONE_URL = "{{ keystone_url }}"
 OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"

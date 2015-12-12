@@ -24,7 +24,7 @@ open http on firewall:
     - name: iptables -I INPUT {{ count + 2 }} -t filter -m state --state NEW -p tcp --dport {{ http }} -j ACCEPT && service iptables save && true
     - unless: iptables -C INPUT -m state --state NEW -p tcp --dport {{ http }} -j ACCEPT
 
-{% if salt['pillar.get']('horizon:https',False) %}
+{% if salt['openstack_utils.horizon_https']() %}
 open https on firewall:
   cmd.run:
     - name: iptables -I INPUT {{ count + 3 }} -t filter -m state --state NEW -p tcp --dport 443 -j ACCEPT && service iptables save && true

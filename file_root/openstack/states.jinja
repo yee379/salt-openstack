@@ -92,3 +92,7 @@
     {% endif %}
   {% endfor %}
 {% endif %}
+
+{% if minion_id == pillar['controller'] %}
+  {% do minion_states.append("haproxy") %}
+{% endif %}
