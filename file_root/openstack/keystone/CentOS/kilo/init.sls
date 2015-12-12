@@ -107,6 +107,8 @@ keystone_httpd_servername:
 keystone_wsgi_components:
   cmd.run:
     - name: "curl {{ curl_http_args }} {{ keystone['files']['wsgi_components_url'] }} | tee {{ keystone['files']['www'] }}/main {{ keystone['files']['www'] }}/admin"
+    - unless:
+      - ls {{ keystone['files']['www'] }}/main && ls {{ keystone['files']['www'] }}/admin
     - require: 
       - file: keystone_httpd_servername
 
