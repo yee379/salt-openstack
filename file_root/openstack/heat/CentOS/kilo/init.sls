@@ -24,8 +24,8 @@ heat_conf:
         database:
           connection: "mysql://{{ heat['database']['username'] }}:{{ heat['database']['password'] }}@{{ openstack_parameters['controller_ip'] }}/{{ heat['database']['db_name'] }}"
         DEFAULT:
-          heat_metadata_server_url: "http://{{ openstack_parameters['controller_ip'] }}:8000"
-          heat_waitcondition_server_url: "http://{{ openstack_parameters['controller_ip'] }}:8000/v1/waitcondition"
+          heat_metadata_server_url: {{ salt['openstack_utils.service_urls']( 'heat-cfn', by_ip=True )['public'] }}
+          heat_waitcondition_server_url: {{ salt['openstack_utils.service_urls']( 'heat-cfn', by_ip=True )['public_with_version'] }}/waitcondition
           stack_domain_admin: heat_domain_admin
           stack_domain_admin_password: {{ service_users['heat']['password'] }}
           stack_user_domain_name: heat_user_domain
