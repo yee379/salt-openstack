@@ -18,10 +18,11 @@ open novnc on firewall:
 
 {% if grains['id'] in salt['pillar.get']('controller',[]) %}
 
+{% set http = salt['pillar.get']('services:horizon:url:public:local_port', 80 ) %}
 open http on firewall:
   cmd.run:
-    - name: iptables -I INPUT {{ count + 2 }} -t filter -m state --state NEW -p tcp --dport 80 -j ACCEPT && service iptables save && true
-    - unless: iptables -C INPUT -m state --state NEW -p tcp --dport 80 -j ACCEPT
+    - name: iptables -I INPUT {{ count + 2 }} -t filter -m state --state NEW -p tcp --dport {{ http }} -j ACCEPT && service iptables save && true
+    - unless: iptables -C INPUT -m state --state NEW -p tcp --dport {{ http }} -j ACCEPT
 
 {% if salt['pillar.get']('horizon:https',False) %}
 open https on firewall:
