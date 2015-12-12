@@ -41,7 +41,7 @@ nova_compute_conf:
         oslo_concurrency:
           lock_path: "{{ nova['files']['nova_tmp'] }}"
         neutron:
-          url: "http://{{ openstack_parameters['controller_ip'] }}:9696"
+          url: {{ salt['openstack_utils.service_urls']( 'neutron', by_ip=True )['public'] }}
           auth_strategy: keystone
           admin_auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357/v2.0"
           admin_tenant_name: service
