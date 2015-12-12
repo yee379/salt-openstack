@@ -81,7 +81,7 @@ def _service_endpoint( service, fqdn, zone, local_or_service='service', include_
     path = ''
     if not path_is_version and include_path and 'path' in d:
         path = '/'+d['path']
-    elif path_is_version:
+    elif path_is_version and include_path and 'version' in service:
         path = '/'+service['version']
     return '%s://%s:%s%s' % ( 
             proto,
@@ -114,6 +114,18 @@ def nova_service_url( fqdn=controller, by_ip=False ):
     context = {}
     for z,d in nova['url'].iteritems():
         context['%s_with_path'%(z,)] = _service_endpoint( nova, fqdn, z, local_or_service='service', include_path=True, path_is_version=True )
+    return context
+    
+def service_urls( service, fqdn=controller, by_ip=False ):
+    s = __salt__['pillar.get']('services')[service]
+    if hasattr(fqdn,'__call__'):
+        fqdn = fqdn( by_ip=by_ip )
+    context = {}
+    for z,d in s['url'].iteritems():
+        context[z] = _service_endpoint( s, fqdn, z, local_or_service='service', include_path=False )
+        context['%s_with_path'%(z,)] = _service_endpoint( s, fqdn, z, local_or_service='service', include_path=True, path_is_version=False )
+        context['%s_with_version'%(z,)] = _service_endpoint( s, fqdn, z, local_or_service='service', include_path=True, path_is_version=True )
+    
     return context
 
 def _openstack_service_context(openstack_service):
