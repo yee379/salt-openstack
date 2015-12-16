@@ -74,7 +74,7 @@ def _service_endpoint( service, fqdn, zone, local_or_service='service', include_
     # is used in front of the service
     if 'https' in d and d['https']:
         proto = 'https'
-        local_or_service = 'local'
+        # local_or_service = 'local'
     else:
         proto = 'http'
     # set path
@@ -117,7 +117,7 @@ def service_urls( service, fqdn=controller, by_ip=False ):
         context['%s_with_version'%(z,)] = _service_endpoint( s, fqdn, z, local_or_service='service', include_path=True, path_is_version=True )
     
     return context
-
+    
 def _openstack_service_context(openstack_service):
     series = openstack_series()
     context = __salt__['pillar.get']('resources:%s:openstack_series:%s' % \
@@ -733,4 +733,4 @@ def haproxy_services( ):
                 and not data in ports: # if port spec has not already been seen
                     ports.append( data )
         for p in ports:
-            yield '%s-%s'%(s,p['service_port']), p['local_port'], p['service_port'], p['https']
+            yield s, '%s-%s'%(s,p['service_port']), p['local_port'], p['service_port'], p['https']
