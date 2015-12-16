@@ -62,6 +62,8 @@ nova_compute_{{ service }}_running:
   service.running:
     - enable: True
     - name: {{ nova['services']['compute']['kvm'][service] }}
+    - require:
+      - ini: nova_compute_conf
     - watch:
       - ini: nova_compute_conf
 {% endfor %}

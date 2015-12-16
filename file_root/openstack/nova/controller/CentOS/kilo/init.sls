@@ -21,7 +21,7 @@ nova_controller_conf:
           auth_strategy: "keystone"
           my_ip: "{{ openstack_parameters['controller_ip'] }}"
           vncserver_listen: {{ minion_ip }}
-          novncproxy_port: {{ salt['pillar.get']('services:novnc:public:local_port', 6080 ) }}
+          novncproxy_port: {{ salt['pillar.get']('services:novnc:url:public:local_port', 6080 ) }}
           vncserver_proxyclient_address: "{{ openstack_parameters['controller_ip'] }}"
           cpu_allocation_ratio: {{ salt['pillar.get']('nova:cpu_allocation_ratio') }}
           ram_allocation_ratio: {{ salt['pillar.get']('nova:ram_allocation_ratio') }}
@@ -47,9 +47,9 @@ nova_controller_conf:
         neutron:
           service_metadata_proxy: True
           metadata_proxy_shared_secret: {{ neutron['metadata_secret'] }}
-          url: "http://{{ openstack_parameters['controller_ip'] }}:9696"
+          url: {{ salt['openstack_utils.service_urls']( 'neutron', by_ip=True )['public'] }}
           auth_strategy: keystone
-          admin_auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357/v2.0"
+          admin_auth_url: {{ salt['openstack_utils.service_urls']( 'keystone', by_ip=True )['admin_with_version'] }}
           admin_tenant_name: service
           admin_username: neutron
           admin_password: "{{ service_users['neutron']['password'] }}"
@@ -81,6 +81,7 @@ nova_controller_{{ service }}_running:
     - name: "{{ nova['services']['controller'][service] }}"
     - require:
       - cmd: nova_db_sync
+      - ini: nova_controller_conf
     - watch:
       - ini: nova_controller_conf
 {% endfor %}
