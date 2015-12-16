@@ -18,11 +18,8 @@ nova_compute_conf:
           auth_strategy: keystone
           my_ip: {{ minion_ip }}
           vnc_enabled: "True"
-          {% if minion_ip == openstack_parameters['controller_ip'] %}
-          vncserver_listen: {{ openstack_parameters['controller_ip'] }}
-          {% else %}
-          vncserver_listen: 0.0.0.0
-          {% endif %}
+          vncserver_listen: {{ minion_ip }}
+          novncproxy_port: {{ salt['pillar.get']('services:novnc:url:public:local_port', 6080 ) }}
           vncserver_proxyclient_address: {{ minion_ip }}
           novncproxy_base_url: {{ salt['openstack_utils.service_urls']( 'novnc', by_ip=False )['public_with_path'] }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"

@@ -10,6 +10,7 @@ archive {{ nova['conf']['nova'] }} controller:
     - source: {{ nova['conf']['nova'] }} 
     - unless: ls {{ nova['conf']['nova'] }}.orig
 
+{% set minion_ip = salt['openstack_utils.minion_ip'](grains['id']) %}
 nova_controller_conf:
   ini.options_present:
     - name: "{{ nova['conf']['nova'] }}"
@@ -19,7 +20,8 @@ nova_controller_conf:
         DEFAULT:
           auth_strategy: "keystone"
           my_ip: "{{ openstack_parameters['controller_ip'] }}"
-          vncserver_listen: "{{ openstack_parameters['controller_ip'] }}"
+          vncserver_listen: {{ minion_ip }}
+          novncproxy_port: {{ salt['pillar.get']('services:novnc:public:local_port', 6080 ) }}
           vncserver_proxyclient_address: "{{ openstack_parameters['controller_ip'] }}"
           cpu_allocation_ratio: {{ salt['pillar.get']('nova:cpu_allocation_ratio') }}
           ram_allocation_ratio: {{ salt['pillar.get']('nova:ram_allocation_ratio') }}
