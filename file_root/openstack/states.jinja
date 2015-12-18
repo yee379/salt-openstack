@@ -20,6 +20,7 @@
         "system",
         "database",
         "message_queue",
+        "haproxy",
         "openstack.keystone",
         "openstack.glance",
         "openstack.nova.controller",
@@ -91,8 +92,4 @@
       {% do minion_states.append(state) %}
     {% endif %}
   {% endfor %}
-{% endif %}
-
-{% if minion_id == pillar['controller'] %}
-  {% do minion_states.append("haproxy") %}
 {% endif %}
