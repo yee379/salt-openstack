@@ -25,6 +25,7 @@ keystone_conf:
           admin_token: {{ keystone['admin_token'] }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          secure_proxy_ssl_header: HTTP_X_FORWARDED_PROTO
         database:
           connection: "mysql://{{ keystone['database']['username'] }}:{{ keystone['database']['password'] }}@{{ openstack_parameters['controller_ip'] }}/{{ keystone['database']['db_name'] }}"
         memcache:
@@ -63,10 +64,10 @@ keystone_virtual_host_conf:
   file.managed:
     - name: {{ keystone['files']['wsgi_conf'] }}
     - contents: |
-        Listen {{ salt['pillar.get']( 'services:keystone:url:internal:service_port', 5000 ) }}
-        Listen {{ salt['pillar.get']( 'services:keystone:url:admin:service_port', 35357 ) }}
+        Listen {{ salt['pillar.get']( 'services:keystone:url:internal:local_port', 5000 ) }}
+        Listen {{ salt['pillar.get']( 'services:keystone:url:admin:local_port', 35357 ) }}
 
-        <VirtualHost *:{{ salt['pillar.get']( 'services:keystone:url:internal:service_port', 5000 ) }}>
+        <VirtualHost *:{{ salt['pillar.get']( 'services:keystone:url:internal:local_port', 5000 ) }}>
             WSGIDaemonProcess keystone-public processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
             WSGIProcessGroup keystone-public
             WSGIScriptAlias / {{ keystone['files']['www'] }}/main
@@ -78,7 +79,7 @@ keystone_virtual_host_conf:
             CustomLog /var/log/httpd/keystone-access.log combined
         </VirtualHost>
 
-        <VirtualHost *:{{ salt['pillar.get']( 'services:keystone:url:admin:service_port', 35357 ) }}>
+        <VirtualHost *:{{ salt['pillar.get']( 'services:keystone:url:admin:local_port', 35357 ) }}>
             WSGIDaemonProcess keystone-admin processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
             WSGIProcessGroup keystone-admin
             WSGIScriptAlias / {{ keystone['files']['www'] }}/admin
@@ -142,6 +143,7 @@ keystone_service_httpd_running:
     - require:
       - file: keystone_wsgi_dir_permissions
       - service: keystone_service_dead
+      - file: keystone_virtual_host_conf
     - watch:
       - file: keystone_virtual_host_conf
       - file: keystone_httpd_servername

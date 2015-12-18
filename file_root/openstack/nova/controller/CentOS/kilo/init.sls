@@ -36,6 +36,7 @@ nova_controller_conf:
         oslo_concurrency:
           lock_path: "{{ nova['files']['nova_tmp'] }}"
         keystone_authtoken: 
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           auth_uri: {{ keystone_auth['public'] }}
           auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
@@ -50,6 +51,7 @@ nova_controller_conf:
           url: {{ salt['openstack_utils.service_urls']( 'neutron', by_ip=True )['public'] }}
           auth_strategy: keystone
           admin_auth_url: {{ salt['openstack_utils.service_urls']( 'keystone', by_ip=True )['admin_with_version'] }}
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           admin_tenant_name: service
           admin_username: neutron
           admin_password: "{{ service_users['neutron']['password'] }}"

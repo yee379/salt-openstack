@@ -25,7 +25,9 @@ neutron_controller_conf:
           notify_nova_on_port_status_changes: True
           notify_nova_on_port_data_changes: True
           nova_url: {{ salt['openstack_utils.service_urls']( 'nova', by_ip=True )['public_with_version'] }}
+          nova_api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
         keystone_authtoken: 
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           auth_uri: {{ keystone_auth['public'] }}
           auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
@@ -37,6 +39,7 @@ neutron_controller_conf:
         nova:
           auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: password
+          auth_protocol: {% if keystone_auth['admin'].startswith('https') %}https{% else %}http{% endif %}
           project_domain_id: default
           user_domain_id: default
           region_name: RegionOne

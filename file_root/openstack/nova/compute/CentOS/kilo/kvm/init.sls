@@ -29,6 +29,7 @@ nova_compute_conf:
           linuxnet_interface_driver: nova.network.linux_net.LinuxOVSInterfaceDriver
           firewall_driver: nova.virt.firewall.NoopFirewallDriver
         keystone_authtoken:
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           auth_uri: {{ keystone_auth['public'] }}
           auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
@@ -38,10 +39,12 @@ nova_compute_conf:
           username: "nova"
           password: "{{ service_users['nova']['password'] }}"
         glance:
+          api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           host: "{{ openstack_parameters['controller_ip'] }}"
         oslo_concurrency:
           lock_path: "{{ nova['files']['nova_tmp'] }}"
         neutron:
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           url: {{ salt['openstack_utils.service_urls']( 'neutron', by_ip=True )['public'] }}
           auth_strategy: keystone
           admin_auth_url: {{ salt['openstack_utils.service_urls']( 'keystone', by_ip=True )['admin_with_version'] }}

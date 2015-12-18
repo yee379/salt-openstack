@@ -15,6 +15,9 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
+{% if salt['pillar.get']( 'ssl_insecure', False ) %}
+OPENSTACK_SSL_NO_VERIFY = True
+{% endif %}
 {% endif %}
 
 WEBROOT = '/dashboard/'

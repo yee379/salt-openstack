@@ -17,6 +17,7 @@ cinder_storage_conf:
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
         keystone_authtoken: 
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           auth_uri: {{ keystone_auth['public'] }}
           auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"

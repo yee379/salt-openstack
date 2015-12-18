@@ -14,6 +14,7 @@ openstack_security_group_{{ security_group }}:
   {% set tenant_users = salt['openstack_utils.openstack_users'](neutron['security_groups'][security_group]['tenant']) %}
     - connection_password: {{ tenant_users[neutron['security_groups'][security_group]['user']]['password'] }}
     - connection_auth_url: "{{ keystone['openstack_services']['keystone']['endpoint']['internalurl'].format(openstack_parameters['controller_ip']) }}"
+    - connection_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
   {% if salt['openstack_utils.compare_ignore_case'](openstack_parameters['reset'], 'soft') %}
     - require:
       - cmd: neutron_reset
