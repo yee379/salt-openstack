@@ -67,7 +67,18 @@ def _keystone_services():
     return services
 
 def _service_endpoint( service, fqdn, zone, local_or_service='service', include_path=True, path_is_version=False ):
-    # uses the services pillar to determine the uri's for openstack services
+    s = _service_dict( service, fqdn, zone, local_or_service=local_or_service )
+    return pformat_service_endpoint( s, include_path=include_path, path_is_version=path_is_version )
+
+def pformat_service_endpoint( d, include_path=True, path_is_version=False ):
+    path = ''
+    if not path_is_version and include_path and d['path']:
+        path = '/'+d['path']
+    elif path_is_version and include_path and d['version']:
+        path = '/'+d['version']
+    return '%s://%s:%s%s' % ( d['protocol'], d['fqdn'], d['port'], path )
+    
+def _service_dict( service, fqdn, zone, local_or_service='service' ):
     d = service['url'][zone]
     # if we have https, then spit out the service_port
     # we enforce that all openstack services listen on localhost bounded ports and that a ssl proxy 
@@ -79,16 +90,13 @@ def _service_endpoint( service, fqdn, zone, local_or_service='service', include_
         proto = 'http'
     # set path
     path = ''
-    if not path_is_version and include_path and 'path' in d:
-        path = '/'+d['path']
-    elif path_is_version and include_path and 'version' in service:
-        path = '/'+service['version']
-    return '%s://%s:%s%s' % ( 
-            proto,
-            fqdn, 
-            d['local_port'] if local_or_service == 'local' else d['service_port'],
-            path
-        )
+    return {
+        'protocol': proto,
+        'fqdn': fqdn,
+        'port': d['local_port'] if local_or_service == 'local' else d['service_port'],
+        'path': d['path'] if 'path' in d and d['path'] else None,
+        'version': service['version'] if 'version' in service and service['version'] else None,
+    }
 
 def controller( by_ip=False ):
     # TODO: support HA
@@ -112,12 +120,18 @@ def service_urls( service, fqdn=controller, by_ip=False ):
         fqdn = fqdn( by_ip=by_ip )
     context = {}
     for z,d in s['url'].iteritems():
-        context[z] = _service_endpoint( s, fqdn, z, local_or_service='service', include_path=False )
-        context['%s_with_path'%(z,)] = _service_endpoint( s, fqdn, z, local_or_service='service', include_path=True, path_is_version=False )
-        context['%s_with_version'%(z,)] = _service_endpoint( s, fqdn, z, local_or_service='service', include_path=True, path_is_version=True )
+        d = _service_dict( s, fqdn, z, local_or_service='service' )
+        context[z] = pformat_service_endpoint( d, include_path=False )
+        context[z+'_protocol'] = d['protocol']
+        context[z+'_port'] = d['port']
+        context['%s_with_path'%(z,)] = pformat_service_endpoint( d, include_path=True, path_is_version=False )
+        context['%s_with_version'%(z,)] = pformat_service_endpoint( d, include_path=True, path_is_version=True )
     
     return context
-    
+
+def ssl_cert( service=None ):
+    return __salt__['pillar.get']('haproxy:ssl_cert:dir') + __salt__['pillar.get']('haproxy:ssl_cert:file')
+
 def _openstack_service_context(openstack_service):
     series = openstack_series()
     context = __salt__['pillar.get']('resources:%s:openstack_series:%s' % \
