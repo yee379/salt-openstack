@@ -1,18 +1,13 @@
 {% set nova = salt['openstack_utils.nova']() %}
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
+{% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
-
-nova_compute_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ nova['conf']['nova'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-{% for pkg in nova['packages']['compute']['kvm'] %}
-      - pkg: nova_compute_{{ pkg }}_install
-{% endfor %}
-
+archive {{ nova['conf']['nova'] }} compute:
+  file.copy:
+    - name: {{ nova['conf']['nova'] }}.orig
+    - source: {{ nova['conf']['nova'] }} 
+    - unless: ls {{ nova['conf']['nova'] }}.orig
 
 {% set minion_ip = salt['openstack_utils.minion_ip'](grains['id']) %}
 nova_compute_conf:
@@ -22,10 +17,11 @@ nova_compute_conf:
         DEFAULT:
           auth_strategy: keystone
           my_ip: {{ minion_ip }}
-          vnc_enabled: True
-          vncserver_listen: 0.0.0.0
+          vnc_enabled: "True"
+          vncserver_listen: {{ minion_ip }}
+          novncproxy_port: {{ salt['pillar.get']('services:novnc:url:public:local_port', 6080 ) }}
           vncserver_proxyclient_address: {{ minion_ip }}
-          novncproxy_base_url: "http://{{ openstack_parameters['controller_name'] }}:6080/vnc_auto.html"
+          novncproxy_base_url: {{ salt['openstack_utils.service_urls']( 'novnc', by_ip=False )['public_with_path'] }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           network_api_class: nova.network.neutronv2.api.API
@@ -33,8 +29,9 @@ nova_compute_conf:
           linuxnet_interface_driver: nova.network.linux_net.LinuxOVSInterfaceDriver
           firewall_driver: nova.virt.firewall.NoopFirewallDriver
         keystone_authtoken:
-          auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000"
-          auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357"
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          auth_uri: {{ keystone_auth['public'] }}
+          auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
@@ -42,20 +39,25 @@ nova_compute_conf:
           username: "nova"
           password: "{{ service_users['nova']['password'] }}"
         glance:
+          api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           host: "{{ openstack_parameters['controller_ip'] }}"
         oslo_concurrency:
           lock_path: "{{ nova['files']['nova_tmp'] }}"
         neutron:
-          url: "http://{{ openstack_parameters['controller_ip'] }}:9696"
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          url: {{ salt['openstack_utils.service_urls']( 'neutron', by_ip=True )['public'] }}
           auth_strategy: keystone
-          admin_auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357/v2.0"
+          admin_auth_url: {{ salt['openstack_utils.service_urls']( 'keystone', by_ip=True )['admin_with_version'] }}
           admin_tenant_name: service
           admin_username: neutron
           admin_password: "{{ service_users['neutron']['password'] }}"
         libvirt:
           virt_type: {{ nova['libvirt_virt_type'] }}
     - require:
-      - ini: nova_compute_conf_keystone_authtoken
+        - file: archive {{ nova['conf']['nova'] }} compute
+{% for pkg in nova['packages']['compute']['kvm'] %}
+        - pkg: nova_compute_{{ pkg }}_install
+{% endfor %}
 
 
 {% for service in nova['services']['compute']['kvm'] %}
@@ -63,6 +65,8 @@ nova_compute_{{ service }}_running:
   service.running:
     - enable: True
     - name: {{ nova['services']['compute']['kvm'][service] }}
+    - require:
+      - ini: nova_compute_conf
     - watch:
       - ini: nova_compute_conf
 {% endfor %}

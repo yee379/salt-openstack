@@ -1,18 +1,13 @@
 {% set neutron = salt['openstack_utils.neutron']() %}
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
+{% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
-
-neutron_controller_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ neutron['conf']['neutron'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-{% for pkg in neutron['packages']['controller'] %}
-      - pkg: neutron_controller_{{ pkg }}_install
-{% endfor %}
-
+archive {{ neutron['conf']['neutron'] }} controller:
+  file.copy:
+    - name: {{ neutron['conf']['neutron'] }}.orig
+    - source: {{ neutron['conf']['neutron'] }}
+    - unless: ls {{ neutron['conf']['neutron'] }}.orig
 
 neutron_controller_conf:
   ini.options_present:
@@ -29,10 +24,12 @@ neutron_controller_conf:
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           notify_nova_on_port_status_changes: True
           notify_nova_on_port_data_changes: True
-          nova_url: "http://{{ openstack_parameters['controller_ip'] }}:8774/v2"
+          nova_url: {{ salt['openstack_utils.service_urls']( 'nova', by_ip=True )['public_with_version'] }}
+          nova_api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
         keystone_authtoken: 
-          auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000"
-          auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357"
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          auth_uri: {{ keystone_auth['public'] }}
+          auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
@@ -40,8 +37,9 @@ neutron_controller_conf:
           username: "neutron"
           password: "{{ service_users['neutron']['password'] }}"
         nova:
-          auth_url: http://{{ openstack_parameters['controller_ip'] }}:35357
+          auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: password
+          auth_protocol: {% if keystone_auth['admin'].startswith('https') %}https{% else %}http{% endif %}
           project_domain_id: default
           user_domain_id: default
           region_name: RegionOne
@@ -49,7 +47,10 @@ neutron_controller_conf:
           username: nova
           password: "{{ service_users['nova']['password'] }}"
     - require:
-      - ini: neutron_controller_conf_keystone_authtoken
+        - file: archive {{ neutron['conf']['neutron'] }} controller
+{% for pkg in neutron['packages']['controller'] %}
+        - pkg: neutron_controller_{{ pkg }}_install
+{% endfor %}
 
 
 neutron_controller_ml2_conf:
