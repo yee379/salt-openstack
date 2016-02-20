@@ -364,8 +364,13 @@ def vlan_networks():
                                            'vlan:physnets', default=[])
     for physnet in vlan_physnets:
         if __salt__['grains.get']('id') in vlan_physnets[physnet]['hosts']:
-            network = ':'.join([physnet, vlan_physnets[physnet]['vlan_range']])
-            vlan_networks.append(network)
+            if 'vlan_range' in vlan_physnets[physnet]:
+                network = ':'.join([physnet, vlan_physnets[physnet]['vlan_range']])
+                vlan_networks.append(network)
+            if 'vlan_ranges' in vlan_physnets[physnet]:
+                for r in vlan_physnets[physnet]['vlan_ranges']:
+                    network = ':'.join([physnet, r])
+                    vlan_networks.append(network)
     return vlan_networks
 
 
