@@ -124,6 +124,7 @@ neutron_network_dhcp_agent_conf:
         DEFAULT: 
           interface_driver: neutron.agent.linux.interface.OVSInterfaceDriver
           dhcp_driver: neutron.agent.linux.dhcp.Dnsmasq
+          enable_isolated_metadata: True
           dhcp_delete_namespaces: True
           dnsmasq_config_file: {{ neutron['conf']['dnsmasq_config_file'] }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
