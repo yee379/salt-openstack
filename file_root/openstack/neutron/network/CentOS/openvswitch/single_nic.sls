@@ -1,6 +1,12 @@
 {% set neutron = salt['openstack_utils.neutron']() %}
 {% set openvswitch = salt['openstack_utils.openvswitch']() %}
 
+{% set veth_bridges = [] %}
+{% for bridge in neutron['bridges'] %}
+  {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'], 'br-proxy' ] %}
+    {% do veth_bridges.append( bridge|replace('br-','') ) %}
+  {% endif %}
+{% endfor %}
 
 openvswitch_promisc_interfaces_script:
   file.managed:
@@ -22,6 +28,7 @@ openvswitch_promisc_interfaces_script:
   {% endif %}
   {% set index = index + 1 %}
 {% endfor %}
+{% if veth_bridges|length > 0 %}
     - require:
 {% set index = 1 %}
 {% for bridge in neutron['bridges'] %}
@@ -31,6 +38,7 @@ openvswitch_promisc_interfaces_script:
   {% endif %}
   {% set index = index + 1 %}
 {% endfor %}
+{% endif %}
 
 
 openvswitch_promisc_interfaces_systemd_service:
