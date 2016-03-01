@@ -59,6 +59,8 @@ nova_compute_conf:
         - pkg: nova_compute_{{ pkg }}_install
 {% endfor %}
 
+include:
+  - openstack.nova.policy_json
 
 {% for service in nova['services']['compute']['kvm'] %}
 nova_compute_{{ service }}_running:
@@ -69,6 +71,7 @@ nova_compute_{{ service }}_running:
       - ini: nova_compute_conf
     - watch:
       - ini: nova_compute_conf
+      - file: push policy.json configuration
 {% endfor %}
 
 

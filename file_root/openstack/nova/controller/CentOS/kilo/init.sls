@@ -75,6 +75,8 @@ nova_controller_sqlite_delete:
     - require:
       - cmd: nova_db_sync
 
+include:
+  - openstack.nova.policy_json
 
 {% for service in nova['services']['controller'] %}
 nova_controller_{{ service }}_running:
@@ -86,6 +88,7 @@ nova_controller_{{ service }}_running:
       - ini: nova_controller_conf
     - watch:
       - ini: nova_controller_conf
+      - file: push policy.json configuration
 {% endfor %}
 
 
