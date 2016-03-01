@@ -7,6 +7,13 @@ rabbitmq_{{ pkg }}_install:
     - name: {{ pkg }}
 {% endfor %}
 
+rabbitmq environment configurations:
+  file.managed:
+    - source: salt://message_queue/rabbitmq/rabbitmq-env.conf
+    - name: /etc/rabbitmq/rabbitmq-env.conf
+    - user: root
+    - group: root
+    - mode: 644
 
 {% for service in rabbitmq['services'] %}
 rabbitmq_{{ service }}_running:
@@ -17,6 +24,7 @@ rabbitmq_{{ service }}_running:
   {% for pkg in rabbitmq['packages'] %}
       - pkg: rabbitmq_{{ pkg }}_install
   {% endfor %}
+      - file: rabbitmq environment configurations
 {% endfor %}
 
 
