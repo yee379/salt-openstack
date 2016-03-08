@@ -1,6 +1,6 @@
 {% set horizon = salt['openstack_utils.horizon']() %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
-
+{% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
 horizon_local_settings:
   file.managed:
@@ -11,18 +11,18 @@ horizon_local_settings:
     - mode: 644
     - template: jinja
     - defaults:
-        controller_ip: "{{ openstack_parameters['controller_ip'] }}"
-  
-  {% if salt['pillar.get']('horizon:https',False) %}
-        https: horizon['https']
-  {% else %}
-        https: False
-  {% endif %}
-  
+        controller_ip: "{{ openstack_parameters['controller_ip'] }}"  
+        https: {{ salt['openstack_utils.horizon_https']() }}
   {% if salt['pillar.get']('horizon:secret_key',False) %}
         secret_key: {{ salt['pillar.get']('horizon:secret_key') }}
   {% else %}
         secret_key: {{ salt['random.get_str']() }}
+  {% endif %}
+  
+  {% if keystone_auth['public_with_path'] %}
+        keystone_url: {{ keystone_auth['public_with_path'] }}
+  {% else %}
+        keystone_url: http://{{ openstack_parameters['controller_ip'] }}:5000/v2.0
   {% endif %}
   
     - require:

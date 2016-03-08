@@ -1,18 +1,7 @@
 {% set cinder = salt['openstack_utils.cinder']() %}
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
-
-
-cinder_storage_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ cinder['conf']['cinder'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-{% for pkg in cinder['packages']['storage'] %}
-      - pkg: cinder_storage_{{ pkg }}_install
-{% endfor %}
-
+{% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
 cinder_storage_conf:
   ini.options_present:
@@ -28,8 +17,9 @@ cinder_storage_conf:
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
         keystone_authtoken: 
-          auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000"
-          auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357"
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          auth_uri: {{ keystone_auth['public'] }}
+          auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
@@ -44,7 +34,9 @@ cinder_storage_conf:
         oslo_concurrency:
           lock_path: "{{ cinder['files']['lock'] }}"
     - require:
-      - ini: cinder_storage_conf_keystone_authtoken
+{% for pkg in cinder['packages']['storage'] %}
+        - pkg: cinder_storage_{{ pkg }}_install
+{% endfor %}
 
 
 {% for service in cinder['services']['storage'] %}

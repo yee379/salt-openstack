@@ -12,6 +12,7 @@ glance_{{ image }}_create:
     - connection_tenant: {{ glance['images'][image]['tenant'] }}
     - connection_password: {{ users[glance['images'][image]['user']]['password'] }}
     - connection_auth_url: {{ keystone['openstack_services']['keystone']['endpoint']['internalurl'].format(openstack_parameters['controller_ip']) }}
+    - connection_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
   {% for param in glance['images'][image]['parameters'] %}
     - {{ param }}: {{ glance['images'][image]['parameters'][param] }}
   {% endfor %}

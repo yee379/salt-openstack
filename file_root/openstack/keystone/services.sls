@@ -10,6 +10,7 @@ keystone_{{ service_name }}_service:
     - description: {{ keystone['openstack_services'][service_name]['description'] }}
     - connection_token: {{ keystone['admin_token'] }}
     - connection_endpoint: {{ keystone['openstack_services']['keystone']['endpoint']['adminurl'].format(openstack_parameters['controller_ip']) }}
+    - connection_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
   {% if salt['openstack_utils.compare_ignore_case'](openstack_parameters['reset'], 'soft') %}
     - require:
       - cmd: keystone_reset
@@ -25,6 +26,7 @@ keystone_{{ service_name }}_endpoint:
     - region: "RegionOne"
     - connection_token: {{ keystone['admin_token'] }}
     - connection_endpoint: {{ keystone['openstack_services']['keystone']['endpoint']['adminurl'].format(openstack_parameters['controller_ip']) }}
+    - connection_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
     - require:
       - keystone: keystone_{{ service_name }}_service
 {% endfor %}

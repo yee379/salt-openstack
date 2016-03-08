@@ -1,7 +1,7 @@
 {% set cinder = salt['openstack_utils.cinder']() %}
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
-
+{% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
 cinder_conf_create:
   file.copy:
@@ -14,16 +14,12 @@ cinder_conf_create:
       - pkg: cinder_controller_{{ pkg }}_install
 {% endfor %}
 
-
-cinder_controller_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ cinder['conf']['cinder'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-      - file: cinder_conf_create
-
-
+archive {{ cinder['conf']['cinder'] }}:
+  file.copy:
+    - name: {{ cinder['conf']['cinder'] }}.orig
+    - source: {{ cinder['conf']['cinder'] }}
+    - unless: ls {{ cinder['conf']['cinder'] }}.orig
+    
 cinder_controller_conf:
   ini.options_present:
     - name: "{{ cinder['conf']['cinder'] }}"
@@ -36,8 +32,9 @@ cinder_controller_conf:
         database:
           connection: "mysql://{{ cinder['database']['username'] }}:{{ cinder['database']['password'] }}@{{ openstack_parameters['controller_ip'] }}/{{ cinder['database']['db_name'] }}"
         keystone_authtoken: 
-          auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000"
-          auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357"
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          auth_uri: {{ keystone_auth['public'] }}
+          auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
@@ -47,8 +44,8 @@ cinder_controller_conf:
         oslo_concurrency:
           lock_path: "{{ cinder['files']['lock'] }}"
     - require:
-      - ini: cinder_controller_conf_keystone_authtoken
-
+      - file: archive {{ cinder['conf']['cinder'] }}
+      - file: cinder_conf_create
 
 cinder_db_sync:
   cmd.run:

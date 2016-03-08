@@ -1,0 +1,88 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+Vagrant.configure(2) do |config|
+
+  # don't bother reinstantiating keys
+  config.ssh.insert_key = false
+  
+  # enable host manager, if available
+  if Vagrant.has_plugin?( 'vagrant-hostmanager' )
+    config.hostmanager.enabled = true
+    config.hostmanager.manage_host = true
+    config.hostmanager.ignore_private_ip = false
+  end
+  
+  box = "centos/7"
+  # box = "yee379/centos7-salt"
+  
+  #
+  # set up one controller and one compute node
+  # once built, goto http://controller.local/dashboard
+  #
+  
+  config.vm.define "controller", primary: true, autostart: true do |c|
+    
+    # set box name
+    c.vm.host_name = "controller.local"
+    # centos box
+    c.vm.box = box
+    # Create a private network
+    c.vm.network "private_network", ip: "192.168.33.11"
+
+    # setup box resources
+    c.vm.provider "virtualbox" do |vb|
+      vb.memory = 4092
+      vb.cpus = 2
+    end
+
+    # install all compoenents
+    salt_highstate( c.vm, "salt/controller", state=false )
+
+  end
+
+  config.vm.define "compute01", autostart: true do |c|
+    c.vm.host_name = "compute01.local"
+    c.vm.box = box
+    c.vm.network "private_network", ip: "192.168.33.12"
+    c.vm.provider "virtualbox" do |vb|
+      vb.memory = 3072
+      vb.cpus = 2
+    end
+    salt_highstate( c.vm, "salt/compute01" )
+  end
+
+end
+
+
+###
+# utility functions
+###
+
+# install salt onto clean centos system; setting up yum repos and versions
+# also copies the relevant minion config (relative vagrant path) to the vm
+def salt_highstate( vm, minion_config, state=true, log_level='info' )
+  
+  # sync salt file and pillar paths (referenced in salt/controller)
+  vm.synced_folder "../../", "/srv/salt/"
+  # temp rule for dev
+  vm.synced_folder "../../../salt-openstack", "/srv/salt-openstack/"
+
+  # install newer salt
+  vm.provision "shell", inline: "yum install -y epel-release"
+  vm.provision "shell", inline: "yum makecache fast"
+  vm.provision "shell", inline: "yum install -y python-pip"
+  vm.provision "shell", inline: "pip install --upgrade six"
+  vm.provision "shell", inline: "yum install -y salt-minion"
+  
+  vm.provision :salt do |salt|
+    salt.bootstrap_options = "-F -c /tmp -P"
+    salt.minion_config = minion_config
+    salt.run_highstate = state
+    salt.colorize = true
+    salt.log_level = log_level
+  end
+  
+end
+

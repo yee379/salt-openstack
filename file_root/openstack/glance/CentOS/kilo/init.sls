@@ -1,19 +1,14 @@
 {% set glance = salt['openstack_utils.glance']() %}
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
+{% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
-
-glance_api_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ glance['conf']['api'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-{% for pkg in glance['packages'] %}
-      - pkg: glance_{{ pkg }}_install
-{% endfor %}
-
-
+archive {{ glance['conf']['api'] }}:
+  file.copy:
+    - name: {{ glance['conf']['api'] }}.orig
+    - source: {{ glance['conf']['api'] }}
+    - unless: ls {{ glance['conf']['api'] }}.orig
+    
 glance_api_conf:
   ini.options_present:
     - name: "{{ glance['conf']['api'] }}"
@@ -21,8 +16,9 @@ glance_api_conf:
         database: 
           connection: "mysql://{{ glance['database']['username'] }}:{{ glance['database']['password'] }}@{{ openstack_parameters['controller_ip'] }}/{{ glance['database']['db_name'] }}"
         keystone_authtoken: 
-          auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000"
-          auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357"
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          auth_uri: {{ keystone_auth['public'] }}
+          auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
@@ -39,17 +35,9 @@ glance_api_conf:
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
     - require:
-      - ini: glance_api_conf_keystone_authtoken
-
-
-glance_registry_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ glance['conf']['registry'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
+        - file: archive {{ glance['conf']['api'] }}
 {% for pkg in glance['packages'] %}
-      - pkg: glance_{{ pkg }}_install
+        - pkg: glance_{{ pkg }}_install
 {% endfor %}
 
 
@@ -60,8 +48,9 @@ glance_registry_conf:
         database:
           connection: "mysql://{{ glance['database']['username'] }}:{{ glance['database']['password'] }}@{{ openstack_parameters['controller_ip'] }}/{{ glance['database']['db_name'] }}"
         keystone_authtoken: 
-          auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000"
-          auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357"
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          auth_uri: {{ keystone_auth['public'] }}
+          auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
@@ -75,7 +64,9 @@ glance_registry_conf:
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
     - require:
-      - ini: glance_registry_conf_keystone_authtoken
+{% for pkg in glance['packages'] %}
+        - pkg: glance_{{ pkg }}_install
+{% endfor %}
 
 
 glance_db_sync:

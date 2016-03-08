@@ -1,7 +1,7 @@
 {% set neutron = salt['openstack_utils.neutron']() %}
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
-
+{% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
 neutron_compute_sysctl_conf:
   ini.options_present:
@@ -18,17 +18,11 @@ neutron_compute_sysctl_enable:
     - require:
       - ini: neutron_compute_sysctl_conf
 
-
-neutron_compute_conf_keystone_authtoken:
-  ini.sections_absent:
-    - name: "{{ neutron['conf']['neutron'] }}"
-    - sections:
-      - keystone_authtoken
-    - require:
-{% for pkg in neutron['packages']['compute']['kvm'] %}
-      - pkg: neutron_compute_{{ pkg }}_install
-{% endfor %}
-
+archive {{ neutron['conf']['neutron'] }} compute:
+  file.copy:
+    - name: {{ neutron['conf']['neutron'] }}.orig
+    - source: {{ neutron['conf']['neutron'] }}
+    - unless: ls {{ neutron['conf']['neutron'] }}.orig
 
 neutron_compute_conf:
   ini.options_present:
@@ -42,8 +36,9 @@ neutron_compute_conf:
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
         keystone_authtoken: 
-          auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000"
-          auth_url: "http://{{ openstack_parameters['controller_ip'] }}:35357"
+          insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          auth_uri: {{ keystone_auth['public'] }}
+          auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
@@ -51,7 +46,10 @@ neutron_compute_conf:
           username: "neutron"
           password: "{{ service_users['neutron']['password'] }}"
     - require: 
-      - ini: neutron_compute_conf_keystone_authtoken
+        - file: archive {{ neutron['conf']['neutron'] }} compute
+{% for pkg in neutron['packages']['compute']['kvm'] %}
+        - pkg: neutron_compute_{{ pkg }}_install
+{% endfor %}
 
 
 neutron_compute_ml2_conf:

@@ -18,6 +18,7 @@ neutron_openstack_router_{{ router }}:
   {% set tenant_users = salt['openstack_utils.openstack_users'](neutron['routers'][router]['tenant']) %}
     - connection_password: {{ tenant_users[neutron['routers'][router]['user']]['password'] }}
     - connection_auth_url: "{{ keystone['openstack_services']['keystone']['endpoint']['internalurl'].format(openstack_parameters['controller_ip']) }}"
+    - connection_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
   {% if salt['openstack_utils.compare_ignore_case'](openstack_parameters['reset'], 'soft') %}
     - require:
       - cmd: neutron_reset

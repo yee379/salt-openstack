@@ -96,6 +96,7 @@ def auth(profile=None, **connection_args):
     insecure = get('insecure', False)
     token = get('token')
     endpoint = get('endpoint', 'http://127.0.0.1:35357/v2.0')
+    debug = get('debug', False)
 
     if token:
         kwargs = {'token': token,
@@ -106,10 +107,13 @@ def auth(profile=None, **connection_args):
                   'tenant_name': tenant,
                   'tenant_id': tenant_id,
                   'auth_url': auth_url}
-        # 'insecure' keyword not supported by all v2.0 keystone clients
-        #   this ensures it's only passed in when defined
-        if insecure:
-            kwargs['insecure'] = True
+
+    # 'insecure' keyword not supported by all v2.0 keystone clients
+    #   this ensures it's only passed in when defined
+    if insecure:
+        kwargs['insecure'] = True
+    if debug:
+        kwargs['debug'] = True
 
     return client.Client(**kwargs)
 
@@ -822,6 +826,8 @@ def user_verify_password(user_id=None, name=None, password=None,
     kwargs = {'username': name,
               'password': password,
               'auth_url': auth_url}
+    if 'connection_insecure' in connection_args:
+        kwargs['insecure'] = True
     try:
         userauth = client.Client(**kwargs)
     except keystoneclient.exceptions.Unauthorized:

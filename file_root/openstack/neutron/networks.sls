@@ -12,6 +12,7 @@ neutron_openstack_network_{{ network }}:
   {% set tenant_users = salt['openstack_utils.openstack_users'](neutron['networks'][network]['tenant']) %}
     - connection_password: {{ tenant_users[neutron['networks'][network]['user']]['password'] }}
     - connection_auth_url: "{{ keystone['openstack_services']['keystone']['endpoint']['adminurl'].format(openstack_parameters['controller_ip']) }}"
+    - connection_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
   {% for network_param in neutron['networks'][network] %}
     {% if network_param not in ['subnets', 'user', 'tenant'] %}
     - {{ network_param }}: {{ neutron['networks'][network][network_param] }}
@@ -34,6 +35,7 @@ neutron_openstack_subnet_{{ subnet }}:
     {% set tenant_users = salt['openstack_utils.openstack_users'](neutron['networks'][network]['tenant']) %}
     - connection_password: {{ tenant_users[neutron['networks'][network]['user']]['password'] }}
     - connection_auth_url: "{{ keystone['openstack_services']['keystone']['endpoint']['adminurl'].format(openstack_parameters['controller_ip']) }}"
+    - connection_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
     {% for subnet_param in network_subnets[subnet] %}
     - {{ subnet_param }}: {{ network_subnets[subnet][subnet_param] }}
     {% endfor %}

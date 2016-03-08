@@ -1,0 +1,12 @@
+master: localhost
+file_client: local
+id: compute01.local
+
+file_roots:
+  openstack:
+    - /srv/salt/file_root
+
+pillar_roots:
+  openstack:
+    - /srv/salt/pillar_root
+
