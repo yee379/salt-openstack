@@ -25,7 +25,7 @@ nova_controller_conf:
           auth_strategy: "keystone"
           my_ip: "{{ openstack_parameters['controller_ip'] }}"
           vncserver_listen: "{{ openstack_parameters['controller_ip'] }}"
-          vncserver_proxyclient_address: "{{ openstack_parameters['controller_ip'] }}"
+          vncserver_proxyclient_address: "{{ openstack_parameters['controller_name'] }}"
           cpu_allocation_ratio: {{ salt['pillar.get']('nova:cpu_allocation_ratio') }}
           ram_allocation_ratio: {{ salt['pillar.get']('nova:ram_allocation_ratio') }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"

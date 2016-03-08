@@ -1,5 +1,9 @@
 import salt
 from re import match
+from os.path import isfile
+
+import logging
+LOG = logging.getLogger(__name__)
 
 def _keystone_services():
     return {'keystone': {'description': 'Openstack Identity',
@@ -172,6 +176,7 @@ def openstack_parameters():
     parameters = {
         'debug_mode': __salt__['pillar.get']('debug_mode', default=False),
         'controller_ip': minion_ip(controller_minion_id),
+        'controller_name': controller_minion_id,
         'reset': __salt__['pillar.get']('reset'),
         'message_queue': __salt__['pillar.get']('message_queue_engine'),
         'series': openstack_series(),
@@ -450,17 +455,22 @@ def network_script_ip_configs(interface_name=None):
     if not interface_name:
         return []
     network_scripts = '/etc/sysconfig/network-scripts'
+    config_file = '%s/ifcfg-%s' % (network_scripts, interface_name)
+    if not isfile( config_file ):
+        raise SystemError( "interface name '%s' not defined on system: please correct single_nic interface defintion" % (interface_name,))
     bootproto = _unquote_str(__salt__['ini.get_option'](
-                '%s/ifcfg-%s' % (network_scripts, interface_name),
+                config_file,
                 'DEFAULT_IMPLICIT', 'BOOTPROTO'))
-    context = { 'BOOTPROTO': bootproto }
+    context = {}
 
     if compare_ignore_case(bootproto, "dhcp"):
+        context.update( { 'OVSBOOTPROTO': 'dhcp', 'OVSDHCPINTERFACES': interface_name } )
         return context
 
     if compare_ignore_case(bootproto, "static") or \
         compare_ignore_case(bootproto, "none"):
-        configs = ['IPADDR', 'NETMASK', 'PREFIX', 'GATEWAY', 'DNS1', 'DNS2']
+        context.update( { 'BOOTPROTO': bootproto } )
+        configs = ['IPADDR', 'NETMASK', 'PREFIX', 'GATEWAY', 'DNS1', 'DNS2', 'ONBOOT']
         for config in configs:
             config_value = _unquote_str(__salt__['ini.get_option'](
                             '%s/ifcfg-%s' % (network_scripts, interface_name),
