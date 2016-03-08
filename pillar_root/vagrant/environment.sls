@@ -1,6 +1,6 @@
-environment_name: "kilo"
+environment_name: "liberty"
 
-openstack_series: "kilo"
+openstack_series: "liberty"
 
 db_engine: "mysql"
 

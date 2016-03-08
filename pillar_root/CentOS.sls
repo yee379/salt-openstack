@@ -11,7 +11,7 @@ resources:
         series:
           juno: "http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm"
           kilo: "http://rdo.fedorapeople.org/openstack-kilo/rdo-release-kilo.rpm"
-          liberty: "http://buildlogs.centos.org/centos/7/cloud/openstack-liberty/centos-release-openstack-liberty-1-3.el7.noarch.rpm"
+          liberty: "https://rdoproject.org/repos/openstack-liberty/rdo-release-liberty.rpm"
     repo_packages:
       - "openstack-selinux"
     services:
