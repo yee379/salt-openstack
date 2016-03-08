@@ -70,8 +70,9 @@ def _auth(profile=None, **connection_args):
         service_type='image',
         endpoint_type='publicURL',
         )
+    insecure = connection_args['connection_insecure'] if 'connection_insecure' in connection_args else False
 
-    return client.Client('1', endpoint, token=token)
+    return client.Client('1', endpoint, token=token, insecure=insecure )
 
 
 def image_create(profile=None, **connection_args):
