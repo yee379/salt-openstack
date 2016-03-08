@@ -22,6 +22,7 @@ nova_compute_conf:
           novncproxy_port: {{ salt['pillar.get']('services:novnc:url:public:local_port', 6080 ) }}
           vncserver_proxyclient_address: {{ minion_ip }}
           novncproxy_base_url: {{ salt['openstack_utils.service_urls']( 'novnc', by_ip=False )['public_with_path'] }}
+          # enabled_apis: osapi_compute, metadata
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           network_api_class: nova.network.neutronv2.api.API
@@ -41,6 +42,8 @@ nova_compute_conf:
         glance:
           api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           host: "{{ openstack_parameters['controller_ip'] }}"
+          protocol: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_protocol'] }}
+          api_servers: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public'] }}
         oslo_concurrency:
           lock_path: "{{ nova['files']['nova_tmp'] }}"
         neutron:
