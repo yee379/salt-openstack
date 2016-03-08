@@ -22,6 +22,7 @@ neutron:
           vlan_range: "238:238"
           hosts:
             controller.local: ~
+            compute01.local: ~
 
     flat: 
       physnets: 
@@ -29,6 +30,7 @@ neutron:
           bridge: br-ex
           hosts:
             controller.local: ~
+            compute01.local: ~
 
     vxlan:
       physnets:
@@ -36,6 +38,7 @@ neutron:
           bridge: br-tun
           hosts:
             controller.local: ~
+            compute01.local: ~
       vxlan_group: 66666
       tunnels:
         tun0:
@@ -47,28 +50,27 @@ neutron:
       - vxlan
     bridge: br-tun
 
-  networks: {}
+  networks:
 
-    # # management network for openstack servers and services
-    # FARM10-OPENSTACK-MGMT:
-    #   user: admin
-    #   tenant: admin
-    #   provider_physical_network: farm10-openstack-mgmt
-    #   provider_network_type: flat
-    #   shared: False
-    #   admin_state_up: True
-    #   router_external: True
-    #   subnets:
-    #     FARM10-OPENSTACK-MGMT:
-    #       cidr: 172.23.99.192/26
-    #       allocation_pools:
-    #         - start: 172.23.99.220
-    #           end: 172.23.99.253
-    #       enable_dhcp: False
-    #       dns_nameservers:
-    #         - 134.79.111.111
-    #         - 134.79.111.112
-    #
+    # management network for openstack servers and services
+    FARM10-OPENSTACK-MGMT:
+      user: admin
+      tenant: admin
+      provider_physical_network: farm10-openstack-mgmt
+      provider_network_type: flat
+      shared: False
+      admin_state_up: True
+      router_external: True
+      subnets:
+        FARM10-OPENSTACK-MGMT:
+          cidr: 192.168.33.0/24
+          allocation_pools:
+            - start: 192.168.33.100
+              end: 192.168.33.200
+          enable_dhcp: False
+          dns_nameservers:
+            - 10.0.2.3
+            
     # # tenant network for grid
     # FARM10-OS-GRID:
     #   user: admin
@@ -88,36 +90,35 @@ neutron:
     #       dns_nameservers:
     #         - 134.79.111.111
     #         - 134.79.111.112
-    #
-    # # tenant network for general
-    # FARM10-VXLANNET:
-    #   user: admin
-    #   tenant: admin
-    #   # not for vxlan
-    #   # provider_physical_network: vxlannet
-    #   provider_network_type: vxlan
-    #   shared: True
-    #   admin_state_up: True
-    #   router_external: False
-    #   subnets:
-    #     FARM10-VXLANNET:
-    #       cidr: 10.0.0.0/24
-    #       allocation_pools:
-    #         - start: 10.0.0.10
-    #           end: 10.0.0.254
-    #       enable_dhcp: True
-    #       dns_nameservers:
-    #         - 134.79.111.111
-    #         - 134.79.111.112
 
-  routers: {}
+    # tenant network for general
+    FARM10-VXLANNET:
+      user: admin
+      tenant: admin
+      # not for vxlan
+      # provider_physical_network: vxlannet
+      provider_network_type: vxlan
+      shared: True
+      admin_state_up: True
+      router_external: False
+      subnets:
+        FARM10-VXLANNET:
+          cidr: 10.0.0.0/24
+          allocation_pools:
+            - start: 10.0.0.10
+              end: 10.0.0.254
+          enable_dhcp: True
+          dns_nameservers:
+            - 10.0.2.3 # vagrant dns
+            
+  routers:
 
-    # rtr-os-ctrl01:
-    #   user: admin
-    #   tenant: admin
-    #   gateway_network: FARM10-OPENSTACK-MGMT
-    #   interfaces:
-    #     - FARM10-VXLANNET
+    rtr-os-farm10:
+      user: admin
+      tenant: admin
+      gateway_network: FARM10-OPENSTACK-MGMT
+      interfaces:
+        - FARM10-VXLANNET
 
   security_groups:
     default:

@@ -1,28 +1,28 @@
-mysql:
+mysql: 
   root_password: change_me
 
 rabbitmq:
   user_name: "openstack"
-  user_password: change_me
+  user_password: "change_me"
 
-databases:
-  nova:
+databases: 
+  nova: 
     db_name: "nova"
     username: "nova"
     password: change_me
-  keystone:
+  keystone: 
     db_name: "keystone"
     username: "keystone"
     password: change_me
-  cinder:
+  cinder: 
     db_name: "cinder"
     username: "cinder"
     password: change_me
-  glance:
+  glance: 
     db_name: "glance"
     username: "glance"
     password: change_me
-  neutron:
+  neutron: 
     db_name: "neutron"
     username: "neutron"
     password: change_me
@@ -30,11 +30,11 @@ databases:
     db_name: "heat"
     username: "heat"
     password: change_me
-
+      
 neutron:
   metadata_secret: change_me
 
-keystone:
+keystone: 
   admin_token: change_me
   roles:
     - "admin"
@@ -84,3 +84,12 @@ keystone:
           roles:
             - "admin"
           email: "openstack@slac.stanford.edu"
+
+horizon:
+  secret_key: change_me
+
+haproxy:
+  admin_password: change_me
+  ssl_cert:
+    dir: /etc/haproxy/
+    file: openstack.pem
