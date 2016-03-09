@@ -526,3 +526,16 @@ resources:
           engine: "openstack-heat-engine"
         files:
           sqlite: "/var/lib/heat/heat.sqlite"
+
+  haproxy:
+    conf:
+      haproxy: /etc/haproxy/haproxy.cfg
+    # packages:
+    #   - "haproxy"
+    # services:
+    #   ntp: "haproxy"
+
+  nginx:
+    conf: 
+      nginx: /etc/nginx/nginx.conf
+      dhparam: /etc/nginx/params.4096

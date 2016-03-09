@@ -84,3 +84,12 @@ keystone:
           roles:
             - "admin"
           email: "openstack@slac.stanford.edu"
+          
+horizon:
+  secret_key: change_me
+
+haproxy:
+  admin_password: change_me
+  ssl_cert:
+    dir: /etc/haproxy/
+    file: openstack.pem
