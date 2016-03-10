@@ -110,6 +110,7 @@ resources:
         conf:
           api: "/etc/glance/glance-api.conf"
           registry: "/etc/glance/glance-registry.conf"
+          cache: "/etc/glance/glance-cache.conf"
         packages:
           - "openstack-glance"
           - "python-glance"
