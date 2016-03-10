@@ -1,8 +1,9 @@
 import salt
+from re import match
+from os.path import isfile
 
 import logging
 LOG = logging.getLogger(__name__)
-from os.path import isfile
 
 def _keystone_services():
     # returns all openstack services with endpoint base on pillar services
@@ -94,6 +95,7 @@ def _service_dict( service, fqdn, zone, local_or_service='service' ):
         'protocol': proto,
         'fqdn': fqdn,
         'port': d['local_port'] if local_or_service == 'local' else d['service_port'],
+        'local_port': d['local_port'],
         'path': d['path'] if 'path' in d and d['path'] else None,
         'version': service['version'] if 'version' in service and service['version'] else None,
     }
@@ -124,6 +126,7 @@ def service_urls( service, fqdn=controller, by_ip=False ):
         context[z] = pformat_service_endpoint( d, include_path=False )
         context[z+'_protocol'] = d['protocol']
         context[z+'_port'] = d['port']
+        context[z+'_local_port'] = d['local_port']
         context['%s_with_path'%(z,)] = pformat_service_endpoint( d, include_path=True, path_is_version=False )
         context['%s_with_version'%(z,)] = pformat_service_endpoint( d, include_path=True, path_is_version=True )
     
@@ -202,7 +205,12 @@ def _rpm_repo_name(rpm_repo_url=None):
     '''
     if not rpm_repo_url:
         return None
-    return rpm_repo_url.split('/')[-1].split('.')[0]
+    name = rpm_repo_url.split('/')[-1].split('.')[0]
+    m = match( r'^(?P<name>.*)-\d+-\d+$', name )
+    if m:
+        return m.groupdict()['name']
+    else:
+        return name
 
 
 def _unquote_str(str_var):
@@ -226,6 +234,9 @@ def kilo_keystone_services():
     services = _keystone_services()
     services['cinder']['endpoint'] = services['cinderv2']['endpoint']
     return services
+
+def liberty_keystone_services():
+    return kilo_keystone_services()
 
 
 def openstack_series():

@@ -9,6 +9,7 @@ archive {{ glance['conf']['api'] }}:
     - source: {{ glance['conf']['api'] }}
     - unless: ls {{ glance['conf']['api'] }}.orig
     
+{% set ssl_cert_path = salt['pillar.get']('haproxy:ssl_cert:dir') + salt['pillar.get']('haproxy:ssl_cert:file') %}
 glance_api_conf:
   ini.options_present:
     - name: "{{ glance['conf']['api'] }}"
@@ -34,6 +35,8 @@ glance_api_conf:
           notification_driver: noop
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          # bind_host: 127.0.0.1
+          bind_port: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_local_port'] }}
     - require:
         - file: archive {{ glance['conf']['api'] }}
 {% for pkg in glance['packages'] %}
@@ -63,10 +66,30 @@ glance_registry_conf:
           notification_driver: noop
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          registry_client_protocol: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_protocol'] }}
+          registry_client_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          # bind_host: 127.0.0.1
     - require:
 {% for pkg in glance['packages'] %}
         - pkg: glance_{{ pkg }}_install
 {% endfor %}
+
+glance_cache_conf:
+  ini.options_present:
+    - name: "{{ glance['conf']['cache'] }}"
+    - sections:
+        DEFAULT:
+          debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          # registry_host: 
+          # registry_port: 9191 # {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_port'] }}
+          registry_client_protocol: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_protocol'] }}
+          registry_client_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+    - require:
+{% for pkg in glance['packages'] %}
+        - pkg: glance_{{ pkg }}_install
+{% endfor %}
+
 
 
 glance_db_sync:
@@ -107,6 +130,6 @@ glance_sqlite_delete:
 glance_wait:
   cmd.run:
     - name: sleep 5
-    - require:
+    - onchanges:
       - service: glance_registry_running
       - service: glance_api_running

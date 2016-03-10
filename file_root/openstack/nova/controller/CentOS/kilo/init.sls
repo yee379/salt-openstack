@@ -21,6 +21,7 @@ nova_controller_conf:
           auth_strategy: "keystone"
           my_ip: "{{ openstack_parameters['controller_ip'] }}"
           vncserver_listen: {{ minion_ip }}
+          # osapi_compute_listen: 127.0.0.1
           novncproxy_port: {{ salt['pillar.get']('services:novnc:url:public:local_port', 6080 ) }}
           vncserver_proxyclient_address: "{{ openstack_parameters['controller_ip'] }}"
           cpu_allocation_ratio: {{ salt['pillar.get']('nova:cpu_allocation_ratio') }}
@@ -31,8 +32,14 @@ nova_controller_conf:
           security_group_api: neutron
           linuxnet_interface_driver: nova.network.linux_net.LinuxOVSInterfaceDriver
           firewall_driver: nova.virt.firewall.NoopFirewallDriver
+          glance_api_servers: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['admin'] }}
+          glance_protocol: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['admin_protocol'] }}
+          glance_api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
         glance:
           host: "{{ openstack_parameters['controller_ip'] }}"
+          api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          api_servers: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['admin'] }}
+          protocol: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['admin_protocol'] }}
         oslo_concurrency:
           lock_path: "{{ nova['files']['nova_tmp'] }}"
         keystone_authtoken: 
