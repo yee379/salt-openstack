@@ -40,10 +40,10 @@ nova_compute_conf:
           username: "nova"
           password: "{{ service_users['nova']['password'] }}"
         glance:
-          api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           host: "{{ openstack_parameters['controller_ip'] }}"
-          protocol: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_protocol'] }}
+          api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           api_servers: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public'] }}
+          protocol: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_protocol'] }}
         oslo_concurrency:
           lock_path: "{{ nova['files']['nova_tmp'] }}"
         neutron:
