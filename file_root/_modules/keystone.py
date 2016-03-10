@@ -48,6 +48,8 @@ Module for handling openstack keystone calls.
 
         salt '*' keystone.tenant_list profile=openstack1
 '''
+import logging
+LOG = logging.getLogger(__name__)
 
 # Import third party libs
 HAS_KEYSTONE = False

@@ -33,12 +33,12 @@ Vagrant.configure(2) do |config|
 
     # setup box resources
     c.vm.provider "virtualbox" do |vb|
-      vb.memory = 4092
+      vb.memory = 4096
       vb.cpus = 2
     end
 
     # install all compoenents
-    salt_highstate( c.vm, "salt/controller", state=true )
+    salt_highstate( c.vm, "salt/controller", highstate=true )
 
   end
 
@@ -50,7 +50,7 @@ Vagrant.configure(2) do |config|
       vb.memory = 3072
       vb.cpus = 2
     end
-    salt_highstate( c.vm, "salt/compute01" )
+    salt_highstate( c.vm, "salt/compute01", highstate=true )
   end
 
 end
@@ -62,7 +62,7 @@ end
 
 # install salt onto clean centos system; setting up yum repos and versions
 # also copies the relevant minion config (relative vagrant path) to the vm
-def salt_highstate( vm, minion_config, state=true, log_level='info' )
+def salt_highstate( vm, minion_config, highstate=true, log_level='error' )
   
   # sync salt file and pillar paths (referenced in salt/controller)
   vm.synced_folder "../../", "/srv/salt/"
@@ -77,9 +77,10 @@ def salt_highstate( vm, minion_config, state=true, log_level='info' )
   vm.provision :salt do |salt|
     salt.bootstrap_options = "-F -c /tmp -P"
     salt.minion_config = minion_config
-    salt.run_highstate = state
+    salt.run_highstate = highstate
     salt.colorize = true
     salt.log_level = log_level
+    salt.verbose = true
   end
   
 end

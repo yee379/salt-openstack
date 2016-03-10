@@ -95,6 +95,7 @@ def _service_dict( service, fqdn, zone, local_or_service='service' ):
         'protocol': proto,
         'fqdn': fqdn,
         'port': d['local_port'] if local_or_service == 'local' else d['service_port'],
+        'local_port': d['local_port'],
         'path': d['path'] if 'path' in d and d['path'] else None,
         'version': service['version'] if 'version' in service and service['version'] else None,
     }
@@ -125,6 +126,7 @@ def service_urls( service, fqdn=controller, by_ip=False ):
         context[z] = pformat_service_endpoint( d, include_path=False )
         context[z+'_protocol'] = d['protocol']
         context[z+'_port'] = d['port']
+        context[z+'_local_port'] = d['local_port']
         context['%s_with_path'%(z,)] = pformat_service_endpoint( d, include_path=True, path_is_version=False )
         context['%s_with_version'%(z,)] = pformat_service_endpoint( d, include_path=True, path_is_version=True )
     

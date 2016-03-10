@@ -25,7 +25,15 @@ hosts:
 
 # assign roles to each host; please also refer to networking.sls
 controller: controller.local
+# TODO: HA controllers
+# controllers:
+  # - controller01.local
+  # - controller02.local
 network: controller.local
+# TODO: Multiple network nodes
+# network:
+  # - controller01.local
+  # - controller02.local
 storage:
   - controller.local
 compute:
@@ -58,6 +66,6 @@ glance:
         tenant: admin
         disk_format: qcow2
         container_format: bare
-        is_public: True
+        # visibility: public
         protected: False
 

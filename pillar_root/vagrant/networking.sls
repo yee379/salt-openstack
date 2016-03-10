@@ -22,6 +22,7 @@ neutron:
           vlan_range: "238:238"
           hosts:
             controller.local: ~
+            compute01.local: ~
 
     flat: 
       physnets: 
@@ -62,7 +63,7 @@ neutron:
       router_external: True
       subnets:
         OPENSTACK-MGMT:
-          cidr: 192.168.33.1/24
+          cidr: 192.168.33.0/24
           allocation_pools:
             - start: 192.168.33.64
               end: 192.168.33.96
@@ -70,26 +71,6 @@ neutron:
           dns_nameservers:
             - 10.0.2.3
 
-    # # tenant network for grid
-    # FARM10-OS-GRID:
-    #   user: admin
-    #   tenant: admin
-    #   provider_physical_network: farm10-os-grid
-    #   provider_network_type: vlan
-    #   shared: True
-    #   admin_state_up: True
-    #   router_external: True
-    #   subnets:
-    #     FARM10-OS-GRID:
-    #       cidr: 134.79.238.0/23
-    #       allocation_pools:
-    #         - start: 134.79.238.10
-    #           end: 134.79.238.253
-    #       enable_dhcp: True
-    #       dns_nameservers:
-    #         - 134.79.111.111
-    #         - 134.79.111.112
-    #
     # tenant network for general
     VXLANNET:
       user: admin

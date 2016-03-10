@@ -1,0 +1,63 @@
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 2048;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    # include /etc/nginx/conf.d/*.conf;
+
+    # glance
+    server {
+        listen 0.0.0.0:9292;
+        # listen [LOCAL_PUBLIC_IPV6]:PORT;
+        server_name = controller.local;
+        access_log /var/log/nginx/glance-access.log;
+        error_log /var/log/nginx/glance-error.log;
+
+        ssl on;
+        ssl_certificate {{ ssl_cert_path }};
+        ssl_certificate_key {{ ssl_cert_path }};
+        # add_header Public-Key-Pins 'pin-sha256="PUB_KEY_PIN_SHA"; max-age=2592000; includeSubDomains';
+        ssl_dhparam {{ dhparam }};
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        ssl_trusted_certificate {{ ssl_cert_path }};
+        add_header X-XSS-Protection "1; mode=block";
+        add_header Content-Security-Policy "default-src 'self' https: wss:;";
+        add_header Strict-Transport-Security "max-age=31536000; includeSubdomains; preload";
+        add_header X-Frame-Options DENY;
+        add_header X-Content-Type-Options nosniff;
+
+        client_max_body_size 0;
+
+        location / {
+            # this changes depending on the service
+            proxy_pass http://127.0.0.1:19292;
+        }
+    }
+    
+
+
+}
