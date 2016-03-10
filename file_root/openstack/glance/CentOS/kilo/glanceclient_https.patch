@@ -1,0 +1,13 @@
+157c157
+<         kw = self.poolmanager.connection_kw
+---
+>         kw = self.poolmanager.connection_pool_kw
+162c162,163
+<         pool = HTTPSConnectionPool(parsed.host, port, **kw)
+---
+>         self.host = parsed.netloc.rsplit(':', 1)[0]        
+>         pool = HTTPSConnectionPool(self.host, port, **kw)
+165c166
+<             self.poolmanager.pools[(parsed.scheme, parsed.host, port)] = pool
+---
+>             self.poolmanager.pools[(parsed.scheme, self.host, port)] = pool

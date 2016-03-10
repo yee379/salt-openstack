@@ -1,16 +1,16 @@
-environment_name: "kilo"
-
+environment_name: "vagrant"
 openstack_series: "kilo"
 
 db_engine: "mysql"
-
 message_queue_engine: "rabbitmq"
-
-reset: ~
 
 debug_mode: True
 
+# ignore certificate validation checks
+ssl_insecure: True
+
 system_upgrade: False
+reset: ~
 
 # add proxy for yum installs etc.
 # http_proxy:
@@ -21,27 +21,24 @@ system_upgrade: False
 # list of all hosts participating in openstack cluster
 hosts:
   controller.local: 192.168.33.11
+  compute01.local: 192.168.33.12
 
 # assign roles to each host; please also refer to networking.sls
 controller: controller.local
+# TODO: HA controllers
+# controllers:
+  # - controller01.local
+  # - controller02.local
 network: controller.local
+# TODO: Multiple network nodes
+# network:
+  # - controller01.local
+  # - controller02.local
 storage:
   - controller.local
 compute:
   - controller.local
-
-# web ui frontend for openstack
-horizon:
-  secret_key: wyzFS4P9zBqiYe8Q2r9V
-  https: False
-  servername: controller.local
-  SSLCertificateFile: /etc/pki/tls/certs/local.crt
-  SSLCACertificateFile: /etc/pki/tls/certs/local.crt
-  # SSLCertificateKeyFile: /etc/apache2/SSL/openstack.example.com.key
-
-# authentication
-keystone:
-  https: True
+  - compute01.local
 
 # block file storage
 cinder:
@@ -69,6 +66,6 @@ glance:
         tenant: admin
         disk_format: qcow2
         container_format: bare
-        is_public: True
+        # visibility: public
         protected: False
 
