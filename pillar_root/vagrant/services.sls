@@ -73,18 +73,18 @@ services:
     # version: v1
     url:
       internal:
-        # https: True
-        local_port: 9292
+        https: True
+        local_port: 19292
         service_port: 9292
         # path: v1
       public:
-        # https: True
-        local_port: 9292
+        https: True
+        local_port: 19292
         service_port: 9292
         # path: v1
       admin:
-        # https: True
-        local_port: 9292
+        https: True
+        local_port: 19292
         service_port: 9292
         # path: v1
 

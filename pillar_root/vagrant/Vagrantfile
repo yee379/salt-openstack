@@ -38,7 +38,7 @@ Vagrant.configure(2) do |config|
     end
 
     # install all compoenents
-    salt_highstate( c.vm, "salt/controller", state=false )
+    salt_highstate( c.vm, "salt/controller", state=true )
 
   end
 
