@@ -17,3 +17,9 @@ cron to poll for metrics:
     - dayweek: '*'
     - require:
       - file: ensure metrics script is installed
+      
+      
+# TODO: add recipe to auto add database and user to influxdb
+# > create database openstack
+# > create user osmaint with password 'osmaint'
+# > grant all on openstack to osmaint

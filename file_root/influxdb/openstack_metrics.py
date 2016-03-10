@@ -183,8 +183,8 @@ if __name__ == '__main__':
     now = int(time())
     cache = []
 
-    #for h in nova.hypervisors.list( detailed=True ):
-    #    logging.debug("h: %s " % (h.to_dict(),) )
+    for h in nova.hypervisors.list( detailed=True ):
+       logging.debug("h: %s " % (h.to_dict(),) )
     servers = {}
     for s in nova.servers.list( search_opts={'all_tenants': 1}, detailed=True ):
         d = s.to_dict()
@@ -193,14 +193,14 @@ if __name__ == '__main__':
         logging.debug( '  %s' % d['image'] )
         logging.debug( '  %s' % d['OS-EXT-STS:power_state'] )
         meta = {
-            'host': d['name'].replace(' ', '_'), 
-            'hypervisor': d['OS-EXT-SRV-ATTR:hypervisor_hostname'], 
-            'image': f['name'], 
-            'tentant': tenants[d['tenant_id']], 
-            'user': users[d['user_id']] 
+            'host': d['name'].replace(' ', '_'),
+            'hypervisor': d['OS-EXT-SRV-ATTR:hypervisor_hostname'],
+            'image': f['name'],
+            'tentant': tenants[d['tenant_id']],
+            'user': users[d['user_id']]
         }
         data = {
-            'disk': f['disk'] + f['OS-FLV-EXT-DATA:ephemeral'], 
+            'disk': f['disk'] + f['OS-FLV-EXT-DATA:ephemeral'],
             'ram': f['ram'],
             'status': '"%s"' % d['status'],
             'vcpus': f['vcpus']
@@ -224,17 +224,20 @@ if __name__ == '__main__':
                 'model': cpu['model'],
                 'sockets': cpu['topology']['sockets'],
                 'threads': cpu['topology']['threads'],
-                'type': this.hypervisor_type, 
+                'type': this.hypervisor_type,
                 'vendor': cpu['vendor'],
-                'version': this.hypervisor_version, 
+                'version': this.hypervisor_version,
             }
             data = {}
             for key in ( 'current_workload', 'disk_available_least', 'free_disk_gb', 'free_ram_mb', 'local_gb', 'local_gb_used', 'memory_mb', 'memory_mb_used', 'running_vms', 'state', 'status', 'vcpus', 'vcpus_used' ):
-                data[key] = getattr( this, key )
+                value = getattr( this, key )
+                if key in ( 'status', 'state', ):
+                    value = '"%s"' % value
+                data[key] = value
             cache.append( pformat_line_protocol( 'hypervisor', meta, data, now ) )
-            
-    
-    # summary of all hypervisors
+
+
+    # # summary of all hypervisors
     stats = nova.hypervisors.statistics()._info
     logging.debug( "HYP: \t %s" % (stats,))
     meta = {
@@ -244,7 +247,7 @@ if __name__ == '__main__':
     for key in ( 'count', 'vcpus_used', 'local_gb_used', 'memory_mb', 'current_workload', 'vcpus', 'running_vms', 'free_disk_gb', 'disk_available_least', 'local_gb', 'free_ram_mb', 'memory_mb_used' ):
         data[key] = stats[key]
     cache.append( pformat_line_protocol( 'system', meta, data, now ) )
-    
+
     # host agg
     agg = host_aggregate_statistics( nova, hypervisors )
     logging.debug( "AGG: \t %s" % (agg,))
@@ -259,14 +262,18 @@ if __name__ == '__main__':
             'real_vcpus': this['vcpus']['real'],
             'total_vcpus': this['vcpus']['total'],
             'used_vcpus': this['vcpus']['used'],
-            'memory_real': this['memory']['real'], 
+            'memory_real': this['memory']['real'],
             'memory_total': this['memory']['total'],
             'memory_used_real': this['memory']['used_real'],
             'memory_free': this['memory']['free'],
             'memory_used': this['memory']['used'],
+            'disk_local_gb': this['disk'][0],
+            'disk_local_gb_used': this['disk'][1],
+            'disk_free_disk_gb': this['disk'][2],
+            'disk_available_least': this['disk'][3],
         }
         cache.append( pformat_line_protocol( 'host_aggregate', meta, data, now ) )
-    
+
     # get services
     for instance in nova.services.list():
         logging.debug(" %s" % (instance.__dict__,) )
