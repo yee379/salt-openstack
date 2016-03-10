@@ -19,6 +19,8 @@ backup glanceclient https file:
 ensure patch package is installed:
   pkg.installed:
     - name: patch
+    - require:
+      - file: backup glanceclient https file
 
 patch glanceclient https file:
   file.patch:
@@ -29,6 +31,7 @@ patch glanceclient https file:
     - require:
       - file: backup glanceclient https file
       - pkg: ensure patch package is installed
+    - onlyif: rpm -q --quiet python-glanceclient-0.17.0-2.el7.noarch
 {% endif %}
 
 # TODO: hmmm.. .how do we propogate the fact that the file has been patched and that the service should be restarted?
