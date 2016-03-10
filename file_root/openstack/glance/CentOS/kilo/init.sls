@@ -37,11 +37,6 @@ glance_api_conf:
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           # bind_host: 127.0.0.1
           bind_port: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_local_port'] }}
-          # registry_host:
-          # registry_port: 9191 # {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_port'] }}
-          registry_client_protocol: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_protocol'] }}
-          registry_client_ca_file: {{ ssl_cert_path }}
-          registry_client_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
     - require:
         - file: archive {{ glance['conf']['api'] }}
 {% for pkg in glance['packages'] %}
