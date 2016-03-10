@@ -545,13 +545,13 @@ def network_script_ip_configs(interface_name=None):
     context = {}
 
     if compare_ignore_case(bootproto, "dhcp"):
-        context.update( { 'OVSBOOTPROTO': 'dhcp', 'OVSDHCPINTERFACES': interface_name } )
+        context.update( { 'OVSBOOTPROTO': 'dhcp', 'OVSDHCPINTERFACES': interface_name, 'BOOTPROTO': 'dhcp' } )
         return context
 
-    if compare_ignore_case(bootproto, "static") or \
+    elif compare_ignore_case(bootproto, "static") or \
         compare_ignore_case(bootproto, "none"):
         context.update( { 'BOOTPROTO': bootproto } )
-        configs = ['IPADDR', 'NETMASK', 'PREFIX', 'GATEWAY', 'DNS1', 'DNS2', 'ONBOOT']
+        configs = ['IPADDR', 'NETMASK', 'PREFIX', 'GATEWAY', 'DNS1', 'DNS2']
         for config in configs:
             config_value = _unquote_str(__salt__['ini.get_option'](
                             '%s/ifcfg-%s' % (network_scripts, interface_name),

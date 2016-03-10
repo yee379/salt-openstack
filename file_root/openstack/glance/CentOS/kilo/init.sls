@@ -96,7 +96,6 @@ glance_api_running:
     - watch:
       - ini: glance_api_conf
 
-
 glance_sqlite_delete:
   file.absent:
     - name: "{{ glance['files']['sqlite'] }}"

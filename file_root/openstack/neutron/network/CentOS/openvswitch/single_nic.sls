@@ -74,6 +74,7 @@ openvswitch_br-proxy_network_script:
           DEVICE: br-proxy
           DEVICETYPE: ovs
           TYPE: OVSBridge
+          ONBOOT: yes
 {% for config in ip_configs %}
           {{ config }}: "{{ ip_configs[config] }}"
 {% endfor %}
@@ -92,10 +93,22 @@ openvswitch_{{ neutron['single_nic']['interface'] }}_ovs_port_network_script:
         TYPE=OVSPort
         DEVICETYPE=ovs
         OVS_BRIDGE=br-proxy
-        ONBOOT=yes
         NOZEROCONF=yes
+        BOOTPROTO=none
     - require:
       - ini: openvswitch_br-proxy_network_script
+
+{% for interface in neutron['single_nic']['disable_interfaces'] %}
+disable network interface {{ interface }}:
+  init.options_present:
+    - name: "{{ openvswitch['conf']['network_scripts'] }}/ifcfg-{{ interface }}"
+    - sections:
+        DEFAULT_IMPLICIT:
+          BOOTPROTO: none
+    - require:
+      - file: openvswitch_{{ neutron['single_nic']['interface'] }}_ovs_port_network_script
+{% endfor %}
+
 
 
 {% set index = 1 %}
@@ -111,7 +124,6 @@ openvswitch_veth-proxy-{{ index }}_ovs_port_network_script:
     - mode: 644
     - contents: |
         DEVICE=veth-proxy-{{ index }}
-        ONBOOT=yes
         TYPE=OVSPort
         DEVICETYPE=ovs
         OVS_BRIDGE=br-proxy
