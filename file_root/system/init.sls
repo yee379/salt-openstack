@@ -9,6 +9,8 @@ include:
 {% if salt['openstack_utils.boolean_value'](openstack_parameters['system_upgrade']) %}
   - system.upgrade
 {% endif %}
+  # patches
+  - openstack.glance.glanceclient_patch
 
 
 openstack_series_persisted:
