@@ -38,11 +38,15 @@ Module for handling openstack glance calls.
         salt '*' glance.image_list profile=openstack1
 '''
 
+import logging
+LOG = logging.getLogger(__name__)
+
 # Import third party libs
 HAS_GLANCE = False
 try:
     from glanceclient import client
     import glanceclient.v1.images
+    # from openstackclient.image import client
     HAS_GLANCE = True
 except ImportError:
     pass
@@ -65,15 +69,9 @@ def _auth(profile=None, **connection_args):
     Set up keystone credentials
     '''
     kstone = __salt__['keystone.auth'](profile, **connection_args)
-    token = kstone.auth_token
-    endpoint = kstone.service_catalog.url_for(
-        service_type='image',
-        endpoint_type='publicURL',
-        )
-    insecure = connection_args['connection_insecure'] if 'connection_insecure' in connection_args else False
-
-    return client.Client('1', endpoint, token=token, insecure=insecure )
-
+    endpoint = __salt__['keystone.endpoint_for']( kstone, 'image' )
+    kwargs = __salt__['keystone.get_service_client_args']( kstone, **connection_args )
+    return client.Client( '1', endpoint=endpoint, **kwargs )
 
 def image_create(profile=None, **connection_args):
     '''
