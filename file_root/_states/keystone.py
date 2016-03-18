@@ -516,6 +516,9 @@ def endpoint_present(name,
     endpoint = __salt__['keystone.endpoint_get'](name,
                                                  profile=profile,
                                                  **connection_args)
+    # delete lookup refs
+    if 'endpoint_ids' in endpoint:
+        del endpoint['endpoint_ids']
     cur_endpoint = dict(region=region,
                         publicurl=publicurl,
                         adminurl=adminurl,
