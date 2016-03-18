@@ -196,7 +196,7 @@ if __name__ == '__main__':
             'host': d['name'].replace(' ', '_'),
             'hypervisor': d['OS-EXT-SRV-ATTR:hypervisor_hostname'],
             'image': f['name'],
-            'tentant': tenants[d['tenant_id']],
+            'tenant': tenants[d['tenant_id']],
             'user': users[d['user_id']]
         }
         data = {
