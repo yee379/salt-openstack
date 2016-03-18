@@ -54,12 +54,22 @@ LOG = logging.getLogger(__name__)
 # Import third party libs
 HAS_KEYSTONE = False
 try:
-    from keystoneclient.v2_0 import client
+    from keystoneclient import client
+    from keystoneclient import session
+    from keystoneclient.v2_0 import client as v2client
+    from keystoneclient.auth.identity import v2 as v2ident
+    from keystoneclient.auth.identity import generic as genericIdentity
     import keystoneclient.exceptions
-    HAS_KEYSTONE = True
-except ImportError:
+    HAS_KEYSTONE = 2
+except ImportError, e:
     pass
 
+try:
+    from keystoneclient.v3 import client as v3client
+    from keystoneclient.auth.identity import v3 as v3ident
+    HAS_KEYSTONE = 3
+except ImportError:
+    pass
 
 def __virtual__():
     '''
@@ -79,7 +89,13 @@ def auth(profile=None, **connection_args):
 
     Only intended to be used within Keystone-enabled modules
     '''
+    kwargs = get_connection_kwargs( profile=profile, **connection_args )
+    if HAS_KEYSTONE == 2:
+        return v2client.Client( **kwargs )
+    else:
+        return v3client.Client( **kwargs )
 
+def get_connection_kwargs( profile=None, **connection_args ):
     if profile:
         prefix = profile + ":keystone."
     else:
@@ -96,29 +112,63 @@ def auth(profile=None, **connection_args):
     tenant_id = get('tenant_id')
     auth_url = get('auth_url', 'http://127.0.0.1:35357/v2.0/')
     insecure = get('insecure', False)
-    token = get('token')
     endpoint = get('endpoint', 'http://127.0.0.1:35357/v2.0')
-    debug = get('debug', False)
-
-    if token:
-        kwargs = {'token': token,
-                  'endpoint': endpoint}
+    # debug = get('debug', False)
+    admin_token = get('token')
+    if admin_token:
+        return {
+            'token': admin_token,
+            'endpoint': endpoint,
+            'insecure': insecure,
+        }
+    
+    if HAS_KEYSTONE == 2:
+        return { 'auth_url': auth_url,
+            'username': user,
+            'password': password,
+            'tenant_name': tenant,
+            'tenant_id': tenant_id,
+            'insecure': insecure }
     else:
-        kwargs = {'username': user,
-                  'password': password,
-                  'tenant_name': tenant,
-                  'tenant_id': tenant_id,
-                  'auth_url': auth_url}
+        return { 'auth_url': auth_url,
+            'username': user,
+            'password': password,
+            'project_name': tenant,
+            'user_domain_name': get( 'user_domain_name', 'default' ),
+            'project_domain_name': get( 'project_domain_name', 'default' ),
+            'insecure': insecure }
 
-    # 'insecure' keyword not supported by all v2.0 keystone clients
-    #   this ensures it's only passed in when defined
-    if insecure:
-        kwargs['insecure'] = True
-    if debug:
-        kwargs['debug'] = True
+def get_service_client_args( kstone, profile=None, **connection_args ):
+    '''
+    retrieve token from keystone for auth for other services
+    '''
+    kwargs = get_connection_kwargs( profile=profile, **connection_args )
+    if HAS_KEYSTONE == 2:
+        return { 'token': kstone.auth_token, 'insecure': kwargs['insecure'] }
+    else:
+        # create a session argument
+        insecure = kwargs['insecure']
+        del kwargs['insecure']
+        auth = v3ident.Password( **kwargs )
+        sess = session.Session( auth=auth, verify=not insecure )
+        return { 'session': sess }
 
-    return client.Client(**kwargs)
-
+    
+def endpoint_for( client, service_type, interface='public' ):
+    '''
+    Retrieve an endpoint url
+    
+    This is basically a keystonev3 replacement for v2's service_catalog.url_for()
+    '''
+    if HAS_KEYSTONE == 2:
+        return client.service_catalog.url_for(
+            service_type=service_type,
+            endpoint_type=interface+'URL',
+        )
+    else:
+        # TODO: how to deal with multiple service and endpoints results?
+        service = client.services.list( enabled=True, type=service_type ).pop()
+        return client.endpoints.list( interface=interface, enabled=True, service=service.id ).pop().url
 
 def ec2_credentials_create(user_id=None, name=None,
                            tenant_id=None, tenant=None,
@@ -279,12 +329,31 @@ def endpoint_list(profile=None, **connection_args):
     kstone = auth(profile, **connection_args)
     ret = {}
     for endpoint in kstone.endpoints.list():
-        ret[endpoint.id] = {'id': endpoint.id,
+        if HAS_KEYSTONE == 2:
+            ret[endpoint.id] = {'id': endpoint.id,
                             'region': endpoint.region,
                             'adminurl': endpoint.adminurl,
                             'internalurl': endpoint.internalurl,
                             'publicurl': endpoint.publicurl,
                             'service_id': endpoint.service_id}
+        else:
+            id = endpoint.service_id
+            if not id in ret:
+                ret[id] = { 'id': endpoint.service_id }
+            if not 'region' in ret[id]:
+                ret[id]['region'] = endpoint.region
+            elif not ret[id]['region'] == endpoint.region:
+                raise Exception('unmatched regions for endpoint id %s' % (endpoint.id,))
+            if not 'service_id' in ret[id]:
+                ret[id]['service_id'] = endpoint.service_id
+            elif not ret[id]['id'] == endpoint.service_id:
+                raise Exception('unmatched service id for endpoint id %s' % (endpoint.id,))
+            # add id's as reference for future as lit
+            if not 'endpoint_ids' in ret[id]:
+                ret[id]['endpoint_ids'] = []
+            ret[id]['endpoint_ids'].append( endpoint.id )
+            zone = endpoint.interface
+            ret[id]['%surl'%zone] = endpoint.url
     return ret
 
 
@@ -305,11 +374,28 @@ def endpoint_create(service, publicurl=None, internalurl=None, adminurl=None,
                                    **connection_args)
     if not keystone_service or 'Error' in keystone_service:
         return {'Error': 'Could not find the specified service'}
-    kstone.endpoints.create(region=region,
+    if HAS_KEYSTONE == 2:
+        kstone.endpoints.create(region=region,
                             service_id=keystone_service[service]['id'],
                             publicurl=publicurl,
                             adminurl=adminurl,
                             internalurl=internalurl)
+    else:
+        kstone.endpoints.create( service=keystone_service[service]['id'],
+                            url=publicurl,
+                            interface='public',
+                            region=region,
+                            enabled=True)
+        kstone.endpoints.create( service=keystone_service[service]['id'],
+                            url=internalurl,
+                            interface='internal',
+                            region=region,
+                            enabled=True)
+        kstone.endpoints.create( service=keystone_service[service]['id'],
+                            url=adminurl,
+                            interface='admin',
+                            region=region,
+                            enabled=True)
     return endpoint_get(service, profile, **connection_args)
 
 
@@ -327,7 +413,12 @@ def endpoint_delete(service, profile=None, **connection_args):
     endpoint = endpoint_get(service, profile, **connection_args)
     if not endpoint or 'Error' in endpoint:
         return {'Error': 'Could not find any endpoints for the service'}
-    kstone.endpoints.delete(endpoint['id'])
+    if HAS_KEYSTONE == 2:
+        kstone.endpoints.delete(endpoint['id'])
+    else:
+        if 'endpoint_ids' in endpoint:
+            for i in endpoint['endpoint_ids']:
+                kstone.endpoints.delete( i )
     endpoint = endpoint_get(service, profile, **connection_args)
     if not endpoint or 'Error' in endpoint:
         return True
@@ -424,7 +515,7 @@ def role_list(profile=None, **connection_args):
     return ret
 
 
-def service_create(name, service_type, description=None, profile=None,
+def service_create(name, service_type, description=None, profile=None, enabled=True,
                    **connection_args):
     '''
     Add service to Keystone service catalog
@@ -437,7 +528,10 @@ def service_create(name, service_type, description=None, profile=None,
 'OpenStack Compute Service'
     '''
     kstone = auth(profile, **connection_args)
-    service = kstone.services.create(name, service_type, description)
+    if HAS_KEYSTONE == 2:
+        service = kstone.services.create(name, service_type, description)
+    else:
+        service = kstone.services.create( name=name, type=service_type, description=description, enabled=enabled )
     return service_get(service.id, profile=profile, **connection_args)
 
 
@@ -509,7 +603,7 @@ def service_list(profile=None, **connection_args):
     return ret
 
 
-def tenant_create(name, description=None, enabled=True, profile=None,
+def tenant_create(name, description=None, enabled=True, profile=None, domain='default', parent=None,
                   **connection_args):
     '''
     Create a keystone tenant
@@ -522,7 +616,10 @@ def tenant_create(name, description=None, enabled=True, profile=None,
         salt '*' keystone.tenant_create test enabled=False
     '''
     kstone = auth(profile, **connection_args)
-    new = kstone.tenants.create(name, description, enabled)
+    if HAS_KEYSTONE == 2:
+        new = kstone.tenants.create(name, description, enabled)
+    else:
+        new = kstone.projects.create( name=name, domain=domain, parent=parent, description=description, enabled=enabled)
     return tenant_get(new.id, profile=profile, **connection_args)
 
 
@@ -570,13 +667,14 @@ def tenant_get(tenant_id=None, name=None, profile=None,
     kstone = auth(profile, **connection_args)
     ret = {}
     if name:
-        for tenant in kstone.tenants.list():
+        tenants = kstone.tenants.list() if HAS_KEYSTONE == 2 else kstone.projects.list()
+        for tenant in tenants:
             if tenant.name == name:
                 tenant_id = tenant.id
                 break
     if not tenant_id:
         return {'Error': 'Unable to resolve tenant id'}
-    tenant = kstone.tenants.get(tenant_id)
+    tenant = kstone.tenants.get(tenant_id) if HAS_KEYSTONE == 2 else kstone.projects.get(tenant_id)
     ret[tenant.name] = {'id': tenant.id,
                         'name': tenant.name,
                         'description': tenant.description,
@@ -605,7 +703,7 @@ def tenant_list(profile=None, **connection_args):
 
 
 def tenant_update(tenant_id=None, name=None, description=None,
-                  enabled=None, profile=None, **connection_args):
+                  enabled=None, profile=None, domain='default', parent=None, **connection_args):
     '''
     Update a tenant's information (keystone tenant-update)
     The following fields may be updated: name, email, enabled.
@@ -620,21 +718,25 @@ def tenant_update(tenant_id=None, name=None, description=None,
     '''
     kstone = auth(profile, **connection_args)
     if not tenant_id:
-        for tenant in kstone.tenants.list():
+        tenants = kstone.tenants.list() if HAS_KEYSTONE == 2 else kstone.projects.list()
+        for tenant in tenants:
             if tenant.name == name:
                 tenant_id = tenant.id
                 break
     if not tenant_id:
         return {'Error': 'Unable to resolve tenant id'}
 
-    tenant = kstone.tenants.get(tenant_id)
+    tenant = kstone.tenants.get(tenant_id) if HAS_KEYSTONE == 2 else kstone.projects.get(tenant_id)
     if not name:
         name = tenant.name
     if not description:
         description = tenant.description
     if enabled is None:
         enabled = tenant.enabled
-    kstone.tenants.update(tenant_id, name, description, enabled)
+    if HAS_KEYSTONE == 2:
+        kstone.tenants.update(tenant_id, name, description, enabled)
+    else:
+        kstone.projects.update( tenant_id, name=name, description=description, enabled=enabled, domain=domain, parent=parent )
 
 
 def token_get(profile=None, **connection_args):
@@ -711,7 +813,7 @@ def user_get(user_id=None, name=None, profile=None, **connection_args):
 
 
 def user_create(name, password, email, tenant_id=None,
-                enabled=True, profile=None, **connection_args):
+                enabled=True, profile=None, domain='default', parent=None, **connection_args):
     '''
     Create a user (keystone user-create)
 
@@ -722,11 +824,18 @@ def user_create(name, password, email, tenant_id=None,
         salt '*' keystone.user_create name=jack password=zero email=jack@halloweentown.org tenant_id=a28a7b5a999a455f84b1f5210264375e enabled=True
     '''
     kstone = auth(profile, **connection_args)
-    item = kstone.users.create(name=name,
-                               password=password,
-                               email=email,
-                               tenant_id=tenant_id,
-                               enabled=enabled)
+    kwargs = { 'name': name,
+               'password': password,
+               'email': email,
+               'enabled': enabled }
+               
+    if HAS_KEYSTONE == 2:
+        kwargs['tenant_id'] = tenant_id
+    else:
+        kwargs['default_project'] = tenant_id
+        kwargs['domain'] = domain
+        kwargs['parent'] = parent
+    item = kstone.users.create( **kwargs )
     return user_get(item.id, profile=profile, **connection_args)
 
 
@@ -790,11 +899,16 @@ def user_update(user_id=None, name=None, email=None, enabled=None,
         enabled = user.enabled
     kstone.users.update(user=user_id, name=name, email=email, enabled=enabled)
     if tenant:
-        for t in kstone.tenants.list():
+        tenants = kstone.tenants.list() if HAS_KEYSTONE == 2 else kstone.projects.list()
+        for t in tenants:
             if t.name == tenant:
                 tenant_id = t.id
                 break
-        kstone.users.update_tenant(user_id, tenant_id)
+        if HAS_KEYSTONE == 2:
+            kstone.users.update_tenant(user_id, tenant_id)
+        else:
+            LOG.error("TODO relate user %s to tenant %s" % (user_id, tenant_id))
+            return { 'Error': 'Updating user not implemented in salt module for keystone v3.'}
     ret = 'Info updated for user ID {0}'.format(user_id)
     return ret
 
@@ -909,7 +1023,10 @@ role_id=ce377245c4ec9b70e1c639c89e8cead4
     if not role_id:
         return {'Error': 'Unable to resolve role id'}
 
-    kstone.roles.add_user_role(user_id, role_id, tenant_id)
+    if HAS_KEYSTONE == 2:
+        kstone.roles.add_user_role(user_id, role_id, tenant_id)
+    else:
+        kstone.roles.grant( role_id, user=user_id, project=tenant_id)
     ret_msg = '"{0}" role added for user "{1}" for "{2}" tenant'
     return ret_msg.format(role, user, tenant)
 
@@ -963,7 +1080,7 @@ role_id=ce377245c4ec9b70e1c639c89e8cead4
 
 
 def user_role_list(user_id=None, tenant_id=None, user_name=None,
-                   tenant_name=None, profile=None, **connection_args):
+                   tenant_name=None, profile=None, domain=None, **connection_args):
     '''
     Return a list of available user_roles (keystone user-roles-list)
 
@@ -984,13 +1101,15 @@ tenant_id=7167a092ece84bae8cead4bf9d15bb3b
                 user_id = user.id
                 break
     if tenant_name:
-        for tenant in kstone.tenants.list():
+        tenants = kstone.tenants.list() if HAS_KEYSTONE == 2 else kstone.projects.list()
+        for tenant in tenants:
             if tenant.name == tenant_name:
                 tenant_id = tenant.id
                 break
     if not user_id or not tenant_id:
         return {'Error': 'Unable to resolve user or tenant id'}
-    for role in kstone.roles.roles_for_user(user=user_id, tenant=tenant_id):
+    roles = kstone.roles.roles_for_user(user=user_id, tenant=tenant_id) if HAS_KEYSTONE == 2 else kstone.roles.list( user=user_id, project=tenant_id, domain=domain )
+    for role in roles:
         ret[role.name] = {'id': role.id,
                           'name': role.name,
                           'user_id': user_id,
