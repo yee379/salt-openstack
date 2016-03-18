@@ -10,83 +10,40 @@ services:
   keystone:
     service_type: identity
     description: 'Openstack Identity'
-    version: v2.0
+    version: v3
     url:
       internal:
         https: True
         local_port: 15000
         service_port: 5000
-        path: v2.0
+        path: v3
       public:
         https: True
         local_port: 15000
         service_port: 5000
-        path: v2.0
+        path: v3
       admin:
         https: True
         local_port: 45357
         service_port: 35357
-        path: v2.0
+        path: v3
 
-  # keystonev3:
-  #   service_type: identity
-  #   description: 'Identity Service v3'
-  #   version: v3
-  #   url:
-  #     internal:
-  #       https: False
-  #       local_port: 15000
-  #       service_port: 5000
-  #       path: v3.0
-  #     public:
-  #       https: False
-  #       local_port: 15000
-  #       service_port: 5000
-  #       path: v3.0
-  #     admin:
-  #       https: False
-  #       local_port: 45357
-  #       service_port: 35357
-  #       path: v3.0
-
-  
-  # glance:
-  #   service_type: image
-  #   description: OpenStack Image service
-  #   url:
-  #     internal:
-  #       https: False
-  #       local_port: 9292
-  #       service_port: 9292
-  #     public:
-  #       https: False
-  #       local_port: 9292
-  #       service_port: 9292
-  #     admin:
-  #       https: False
-  #       local_port: 9292
-  #       service_port: 9292
-  #
   glance:
     service_type: image
     description: OpenStack Image service
-    # version: v1
     url:
       internal:
         https: True
         local_port: 19292
         service_port: 9292
-        # path: v1
       public:
         https: True
         local_port: 19292
         service_port: 9292
-        # path: v1
       admin:
         https: True
         local_port: 19292
         service_port: 9292
-        # path: v1
 
   nova:
     service_type: compute
@@ -94,57 +51,36 @@ services:
     version: v2
     url:
       admin:
-        https: False
-        local_port: 8774
+        https: True
+        local_port: 18774
         service_port: 8774
         path: v2/%(tenant_id)s
       public:
-        https: False
-        local_port: 8774
+        https: True
+        local_port: 18774
         service_port: 8774
         path: v2/%(tenant_id)s
       internal:
-        https: False
-        local_port: 8774
+        https: True
+        local_port: 18774
         service_port: 8774
         path: v2/%(tenant_id)s
-
-  # nova:
-  #   service_type: compute
-  #   description: nova compute service
-  #   version: v2
-  #   url:
-  #     admin:
-  #       https: True
-  #       local_port: 18774
-  #       service_port: 8774
-  #       path: v2/%(tenant_id)s
-  #     public:
-  #       https: True
-  #       local_port: 18774
-  #       service_port: 8774
-  #       path: v2/%(tenant_id)s
-  #     internal:
-  #       https: True
-  #       local_port: 18774
-  #       service_port: 8774
-  #       path: v2/%(tenant_id)s
     
   neutron:
     service_type: network
     description: OpenStack Networking
     url:
       admin: 
-        https: False
-        local_port: 9696
+        https: True
+        local_port: 19696
         service_port: 9696
       internal: 
-        https: False
-        local_port: 9696
+        https: True
+        local_port: 19696
         service_port: 9696
       public:
-        https: False
-        local_port: 9696
+        https: True
+        local_port: 19696
         service_port: 9696
 
   cinder:
@@ -153,18 +89,18 @@ services:
     version: v1
     url:
       admin:
-        https: False
-        local_port: 8776
+        https: True
+        local_port: 18776
         service_port: 8776
         path: v1/%(tenant_id)s
       internal:
-        https: False
-        local_port: 8776
+        https: True
+        local_port: 18776
         service_port: 8776
         path: v1/%(tenant_id)s
       public:
-        https: False
-        local_port: 8776
+        https: True
+        local_port: 18776
         service_port: 8776
         path: v1/%(tenant_id)s
 
@@ -174,18 +110,18 @@ services:
     version: v2
     url:
       admin:
-        https: False
-        local_port: 8776
+        https: True
+        local_port: 18776
         service_port: 8776
         path: v2/%(tenant_id)s
       internal:
-        https: False
-        local_port: 8776
+        https: True
+        local_port: 18776
         service_port: 8776
         path: v2/%(tenant_id)s
       public:
-        https: False
-        local_port: 8776
+        https: True
+        local_port: 18776
         service_port: 8776
         path: v2/%(tenant_id)s
 
