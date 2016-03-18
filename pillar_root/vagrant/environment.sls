@@ -1,5 +1,5 @@
 environment_name: "vagrant"
-openstack_series: "kilo"
+openstack_series: "liberty"
 
 db_engine: "mysql"
 message_queue_engine: "rabbitmq"
