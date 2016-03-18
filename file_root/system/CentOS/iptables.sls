@@ -1,5 +1,7 @@
 {% set count = 4 %}
 
+# open all ports for other nodes in cluster
+# maybe open just for services?
 {% for host in salt['pillar.get']( 'hosts' ) %}
   {% set host_ip = salt['openstack_utils.minion_ip']( host ) %}
   {% set count = count + 1 %}
@@ -16,21 +18,16 @@ open novnc on firewall:
     - name: iptables -I INPUT {{ count + 1 }} -t filter -m state --state NEW -p tcp --dport {{ novnc_port }} -j ACCEPT && service iptables save && true
     - unless: iptables -C INPUT -m state --state NEW -p tcp --dport {{ novnc_port }} -j ACCEPT
 
+# open the ports for the public facing services
 {% if grains['id'] in salt['pillar.get']('controller',[]) %}
 
-{% set http = salt['pillar.get']('services:horizon:url:public:local_port', 80 ) %}
-open http on firewall:
+{% for service in ( 'keystone', 'nova', 'neutron', 'cinder', 'glance', 'horizon' ) %}
+{% set port = salt['openstack_utils.service_urls']( service, by_ip=True )['public_port'] %}
+open {{ service }} service on firewall:
   cmd.run:
-    - name: iptables -I INPUT {{ count + 2 }} -t filter -m state --state NEW -p tcp --dport {{ http }} -j ACCEPT && service iptables save && true
-    - unless: iptables -C INPUT -m state --state NEW -p tcp --dport {{ http }} -j ACCEPT
+    - name: iptables -I INPUT {{ count + 2 + loop.index }} -t filter -m state --state NEW -p tcp --dport {{ port }} -j ACCEPT && service iptables save && true
+    - unless: iptables -C INPUT -m state --state NEW -p tcp --dport {{ port }} -j ACCEPT
 
-{% if salt['openstack_utils.horizon_https']() %}
-open https on firewall:
-  cmd.run:
-    - name: iptables -I INPUT {{ count + 3 }} -t filter -m state --state NEW -p tcp --dport 443 -j ACCEPT && service iptables save && true
-    - unless: iptables -C INPUT -m state --state NEW -p tcp --dport 443 -j ACCEPT
-    - require:
-      - cmd: open http on firewall
-{% endif %}
+{% endfor %}
 
 {% endif %}
