@@ -754,6 +754,7 @@ def heat():
     return _openstack_service_context('heat')
 
 def haproxy_services( ):
+    seen_ports = {}
     for s, d in __salt__['pillar.get']('services').iteritems():
         # work out if we have different port numbers like with keystone
         ports = []
@@ -765,4 +766,6 @@ def haproxy_services( ):
                 and not data in ports: # if port spec has not already been seen
                     ports.append( data )
         for p in ports:
-            yield s, '%s-%s'%(s,p['service_port']), p['local_port'], p['service_port'], p['https']
+            if not p['service_port'] in seen_ports:
+                seen_ports[p['service_port']] = True
+                yield s, '%s-%s'%(s,p['service_port']), p['local_port'], p['service_port'], p['https']
