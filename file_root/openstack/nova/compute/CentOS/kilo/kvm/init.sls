@@ -32,7 +32,7 @@ nova_compute_conf:
         keystone_authtoken:
           insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           auth_uri: {{ keystone_auth['public'] }}
-          auth_url: {{ keystone_auth['admin'] }}
+          auth_url: {{ keystone_auth['admin_with_path'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
@@ -50,7 +50,7 @@ nova_compute_conf:
           insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           url: {{ salt['openstack_utils.service_urls']( 'neutron', by_ip=True )['public'] }}
           auth_strategy: keystone
-          admin_auth_url: {{ salt['openstack_utils.service_urls']( 'keystone', by_ip=True )['admin_with_version'] }}
+          admin_auth_url: {{ salt['openstack_utils.service_urls']( 'keystone', by_ip=True )['admin'] }}/v2.0
           admin_tenant_name: service
           admin_username: neutron
           admin_password: "{{ service_users['neutron']['password'] }}"

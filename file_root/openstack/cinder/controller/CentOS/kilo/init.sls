@@ -30,6 +30,8 @@ cinder_controller_conf:
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           glance_api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          # osapi_volume_listen: 
+          osapi_volume_listen_port: {{ salt['openstack_utils.service_urls']( 'cinder', by_ip=True )['public_local_port'] }}
         database:
           connection: "mysql://{{ cinder['database']['username'] }}:{{ cinder['database']['password'] }}@{{ openstack_parameters['controller_ip'] }}/{{ cinder['database']['db_name'] }}"
         keystone_authtoken: 

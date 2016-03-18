@@ -22,6 +22,7 @@ nova_controller_conf:
           my_ip: "{{ openstack_parameters['controller_ip'] }}"
           vncserver_listen: {{ minion_ip }}
           # osapi_compute_listen: 127.0.0.1
+          osapi_compute_listen_port: {{ salt['openstack_utils.service_urls']( 'nova', by_ip=True )['public_local_port'] }}
           novncproxy_port: {{ salt['pillar.get']('services:novnc:url:public:local_port', 6080 ) }}
           vncserver_proxyclient_address: "{{ openstack_parameters['controller_ip'] }}"
           cpu_allocation_ratio: {{ salt['pillar.get']('nova:cpu_allocation_ratio') }}
@@ -45,7 +46,7 @@ nova_controller_conf:
         keystone_authtoken: 
           insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           auth_uri: {{ keystone_auth['public'] }}
-          auth_url: {{ keystone_auth['admin'] }}
+          auth_url: {{ keystone_auth['admin_with_path'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
@@ -57,7 +58,7 @@ nova_controller_conf:
           metadata_proxy_shared_secret: {{ neutron['metadata_secret'] }}
           url: {{ salt['openstack_utils.service_urls']( 'neutron', by_ip=True )['public'] }}
           auth_strategy: keystone
-          admin_auth_url: {{ salt['openstack_utils.service_urls']( 'keystone', by_ip=True )['admin_with_version'] }}
+          admin_auth_url: {{ salt['openstack_utils.service_urls']( 'keystone', by_ip=True )['admin'] }}/v2.0
           insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           admin_tenant_name: service
           admin_username: neutron

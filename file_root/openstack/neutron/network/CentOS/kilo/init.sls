@@ -32,7 +32,7 @@ neutron_network_conf:
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
         keystone_authtoken: 
           auth_uri: {{ keystone_auth['public'] }}
-          auth_url: {{ keystone_auth['admin'] }}
+          auth_url: {{ keystone_auth['admin_with_path'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
