@@ -36,6 +36,8 @@ keystonerc_{{ user }}_in_{{ tenant_name }}_create:
         export OS_AUTH_URL={{ keystone_service['public_with_version'] }}
         export OS_VOLUME_API_VERSION=2
         export OS_IMAGE_API_VERSION=2
+        export OS_USER_DOMAIN_NAME=default
+        export OS_PROJECT_DOMAIN_NAME=default
         export PS1='[\u@\h \W(keystonerc_{{ user }}:{{ tenant_name }})]\$ '
     - require:
       - keystone: keystone_{{ user }}_user_in_{{ tenant_name }}
