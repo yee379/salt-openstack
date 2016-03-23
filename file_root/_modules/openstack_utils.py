@@ -116,7 +116,7 @@ def keystone_auth( by_ip=False ):
         context[z] = _service_endpoint( ks, c, z, local_or_service='service', include_path=False )
         context['%s_with_path'%(z,)] = _service_endpoint( ks, c, z, local_or_service='service', include_path=True )
         # create dynamic variable based on keystone version requested
-        context['url'] = context[z] if ks_version == 'v2.0' else context['%s_with_path'%(z,)]
+    context['auth_url'] = context['admin'] if ks_version == 'v2.0' else context['admin_with_path']
     return context
     
 def service_urls( service, fqdn=controller, by_ip=False ):
@@ -132,7 +132,9 @@ def service_urls( service, fqdn=controller, by_ip=False ):
         context[z+'_local_port'] = d['local_port']
         context['%s_with_path'%(z,)] = pformat_service_endpoint( d, include_path=True, path_is_version=False )
         context['%s_with_version'%(z,)] = pformat_service_endpoint( d, include_path=True, path_is_version=True )
-    
+    # assume all version numbers are same
+    if 'version' in d:
+        context['version'] = d['version']
     return context
 
 def ssl_cert( service=None ):
