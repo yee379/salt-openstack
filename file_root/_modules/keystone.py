@@ -89,7 +89,15 @@ def auth(profile=None, **connection_args):
 
     Only intended to be used within Keystone-enabled modules
     '''
+    global HAS_KEYSTONE
     kwargs = get_connection_kwargs( profile=profile, **connection_args )
+    version = None
+    if 'version' in kwargs:
+        version = kwargs['version'].replace('v','')
+    elif 'auth_url' in kwargs:
+        version = kwargs['auth_url'].split('/')[-1]
+    if version:
+        HAS_KEYSTONE = int( float( version ) )
     if HAS_KEYSTONE == 2:
         return v2client.Client( **kwargs )
     else:
@@ -115,20 +123,22 @@ def get_connection_kwargs( profile=None, **connection_args ):
     endpoint = get('endpoint', 'http://127.0.0.1:35357/v2.0')
     # debug = get('debug', False)
     admin_token = get('token')
+    version = get('version', 'v2.0')
     if admin_token:
         return {
             'token': admin_token,
             'endpoint': endpoint,
             'insecure': insecure,
-        }
-    
+            'version': version }
+
     if HAS_KEYSTONE == 2:
         return { 'auth_url': auth_url,
             'username': user,
             'password': password,
             'tenant_name': tenant,
             'tenant_id': tenant_id,
-            'insecure': insecure }
+            'insecure': insecure,
+            'version': version }
     else:
         return { 'auth_url': auth_url,
             'username': user,
@@ -136,7 +146,8 @@ def get_connection_kwargs( profile=None, **connection_args ):
             'project_name': tenant,
             'user_domain_name': get( 'user_domain_name', 'default' ),
             'project_domain_name': get( 'project_domain_name', 'default' ),
-            'insecure': insecure }
+            'insecure': insecure,
+            'version': version }
 
 def get_service_client_args( kstone, profile=None, **connection_args ):
     '''
