@@ -32,7 +32,7 @@ nova_compute_conf:
         keystone_authtoken:
           insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           auth_uri: {{ keystone_auth['public'] }}
-          auth_url: {{ keystone_auth['url'] }}
+          auth_url: {{ keystone_auth['auth_url'] }}
           auth_plugin: "password"
           project_domain_id: "default"
           user_domain_id: "default"
