@@ -109,11 +109,14 @@ def controller( by_ip=False ):
 
 def keystone_auth( by_ip=False ):
     ks = __salt__['pillar.get']('services')['keystone']
+    ks_version = ks['version']
     c = controller( by_ip=by_ip )
     context = {}
     for z,d in ks['url'].iteritems():
         context[z] = _service_endpoint( ks, c, z, local_or_service='service', include_path=False )
         context['%s_with_path'%(z,)] = _service_endpoint( ks, c, z, local_or_service='service', include_path=True )
+        # create dynamic variable based on keystone version requested
+        context['url'] = context[z] if ks_version == 'v2.0' else context['%s_with_path'%(z,)]
     return context
     
 def service_urls( service, fqdn=controller, by_ip=False ):
