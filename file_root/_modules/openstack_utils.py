@@ -236,12 +236,14 @@ def juno_keystone_services():
 
 
 def kilo_keystone_services():
-    services = _keystone_services()
-    services['cinder']['endpoint'] = services['cinderv2']['endpoint']
-    return services
+    # services = _keystone_services()
+    # services['cinder']['endpoint'] = services['cinderv2']['endpoint']
+    # return services
+    return _keystone_services()
 
 def liberty_keystone_services():
-    return kilo_keystone_services()
+    # return kilo_keystone_services()
+    return _keystone_services()
 
 
 def openstack_series():
