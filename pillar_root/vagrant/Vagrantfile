@@ -15,7 +15,7 @@ Vagrant.configure(2) do |config|
   end
   
   # box = "centos/7"
-  box = "yee379/centos7-salt.20160308"
+  box = "yee379/centos7-salt"
   
   #
   # set up one controller and one compute node
