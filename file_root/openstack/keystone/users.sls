@@ -17,6 +17,7 @@ keystone_{{ user }}_user_in_{{ tenant_name }}:
     - connection_token: "{{ keystone['admin_token'] }}"
     - connection_endpoint: {{ keystone_service['admin_with_version'] }}
     - connection_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+    - connection_version: {{ keystone_service['version'] }}
     {% if salt['openstack_utils.compare_ignore_case'](openstack_parameters['reset'], 'soft') %}
     - require:
       - cmd: keystone_reset
