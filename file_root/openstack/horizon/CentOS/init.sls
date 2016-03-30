@@ -11,20 +11,14 @@ horizon_local_settings:
     - mode: 644
     - template: jinja
     - defaults:
-        controller_ip: "{{ openstack_parameters['controller_ip'] }}"  
+        controller_ip: "{{ openstack_parameters['controller_ip'] }}"
         https: {{ salt['openstack_utils.horizon_https']() }}
-  {% if salt['pillar.get']('horizon:secret_key',False) %}
-        secret_key: {{ salt['pillar.get']('horizon:secret_key') }}
-  {% else %}
-        secret_key: {{ salt['random.get_str']() }}
-  {% endif %}
-  
-  {% if keystone_auth['public_with_path'] %}
-        keystone_url: {{ keystone_auth['public_with_path'] }}
-  {% else %}
-        keystone_url: http://{{ openstack_parameters['controller_ip'] }}:5000/v2.0
-  {% endif %}
-  
+        ssl_insecure: {{ salt['pillar.get']('ssl_insecure', False ) }}
+        secret_key: {{ salt['pillar.get']('horizon:secret_key', salt['random.get_str']() ) }}
+        keystone_url: {{ keystone_auth['public_with_version'] }}
+        multidomain: False
+        default_domain: Default
+        debug: {{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}
     - require:
 {% for pkg in horizon['packages'] %}
       - pkg: horizon_{{ pkg }}_install

@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from openstack_dashboard import exceptions
 
-DEBUG = False
+DEBUG = {{ debug }}
 TEMPLATE_DEBUG = DEBUG
 
 {% if https %}
@@ -16,9 +16,7 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-{% if salt['pillar.get']( 'ssl_insecure', False ) %}
-OPENSTACK_SSL_NO_VERIFY = True
-{% endif %}
+OPENSTACK_SSL_NO_VERIFY = {{ ssl_insecure }}
 {% endif %}
 
 WEBROOT = '/dashboard/'
@@ -43,11 +41,11 @@ OPENSTACK_API_VERSIONS = {
 
 # Set this to True if running on multi-domain model. When this is enabled, it
 # will require user to enter the Domain name in addition to username for login.
-#OPENSTACK_KEYSTONE_MULTIDOMAIN_SUPPORT = False
+OPENSTACK_KEYSTONE_MULTIDOMAIN_SUPPORT = {{ multidomain }}
 
 # Overrides the default domain used when running on single-domain model
 # with Keystone V3. All entities will be created in the default domain.
-#OPENSTACK_KEYSTONE_DEFAULT_DOMAIN = 'Default'
+OPENSTACK_KEYSTONE_DEFAULT_DOMAIN = '{{ default_domain }}'
 
 # Set Console type:
 # valid options are "AUTO"(default), "VNC", "SPICE", "RDP", "SERIAL" or None
