@@ -1,5 +1,4 @@
 {% set neutron = salt['openstack_utils.neutron']() %}
-{% set keystone = salt['openstack_utils.keystone']() %}
 {% set keystone_service = salt['openstack_utils.service_urls']( 'keystone', by_ip=True ) %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 
@@ -12,7 +11,7 @@ neutron_openstack_network_{{ network }}:
     - connection_tenant: {{ neutron['networks'][network]['tenant'] }}
   {% set tenant_users = salt['openstack_utils.openstack_users'](neutron['networks'][network]['tenant']) %}
     - connection_password: {{ tenant_users[neutron['networks'][network]['user']]['password'] }}
-    - connection_auth_url: "{{ keystone['openstack_services']['keystone']['endpoint']['adminurl'].format(openstack_parameters['controller_ip']) }}"
+    - connection_auth_url: {{ keystone_service['internal_with_version'] }}
     - connection_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
     - connection_version: {{ keystone_service['version'] }}
   {% for network_param in neutron['networks'][network] %}
@@ -36,7 +35,7 @@ neutron_openstack_subnet_{{ subnet }}:
     - connection_tenant: {{ neutron['networks'][network]['tenant'] }}
     {% set tenant_users = salt['openstack_utils.openstack_users'](neutron['networks'][network]['tenant']) %}
     - connection_password: {{ tenant_users[neutron['networks'][network]['user']]['password'] }}
-    - connection_auth_url: "{{ keystone['openstack_services']['keystone']['endpoint']['adminurl'].format(openstack_parameters['controller_ip']) }}"
+    - connection_auth_url: {{ keystone_service['internal_with_version'] }}
     - connection_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
     - connection_version: {{ keystone_service['version'] }}
     {% for subnet_param in network_subnets[subnet] %}

@@ -82,6 +82,15 @@ def __virtual__():
 
 __opts__ = {}
 
+def _parse_version( **kwargs ):
+    global HAS_KEYSTONE
+    version = None
+    if 'version' in kwargs:
+        version = kwargs['version'].replace('v','')
+    elif 'auth_url' in kwargs:
+        version = kwargs['auth_url'].split('/')[-1].replace('v','')
+    if version:
+        HAS_KEYSTONE = int( float( version ) )
 
 def auth(profile=None, **connection_args):
     '''
@@ -89,15 +98,11 @@ def auth(profile=None, **connection_args):
 
     Only intended to be used within Keystone-enabled modules
     '''
-    global HAS_KEYSTONE
-    kwargs = get_connection_kwargs( include_version=True, profile=profile, **connection_args )
-    version = None
-    if 'version' in kwargs:
-        version = kwargs['version'].replace('v','')
-    elif 'auth_url' in kwargs:
-        version = kwargs['auth_url'].split('/')[-1]
-    if version:
-        HAS_KEYSTONE = int( float( version ) )
+    if 'token' in connection_args or 'session' in connection_args:
+        kwargs = connection_args
+    else:
+        kwargs = get_connection_kwargs( include_version=True, profile=profile, **connection_args )
+    _parse_version( **kwargs )
     if 'version' in kwargs:
         del kwargs['version']
     if HAS_KEYSTONE == 2:
@@ -130,12 +135,6 @@ def get_connection_kwargs( include_version=False, profile=None, **connection_arg
     if admin_token:
         kwargs.update( { 'token': admin_token,
             'endpoint': endpoint } )
-    if HAS_KEYSTONE == 2:
-        kwargs.update( { 'auth_url': auth_url,
-            'username': user,
-            'password': password,
-            'tenant_name': tenant,
-            'tenant_id': tenant_id } )
     else:
         kwargs.update( { 'auth_url': auth_url,
             'username': user,
@@ -143,21 +142,28 @@ def get_connection_kwargs( include_version=False, profile=None, **connection_arg
             'project_name': tenant,
             'user_domain_name': get( 'user_domain_name', 'default' ),
             'project_domain_name': get( 'project_domain_name', 'default' ) } )
+    _parse_version( **kwargs )
     return kwargs
 
-def get_service_client_args( kstone, profile=None, **connection_args ):
+def get_service_client_args( kstone=None, profile=None, **connection_args ):
     '''
     retrieve token from keystone for auth for other services
     '''
     kwargs = get_connection_kwargs( profile=profile, **connection_args )
     if HAS_KEYSTONE == 2:
-        return { 'token': kstone.auth_token, 'insecure': kwargs['insecure'] }
+        # bootstrap
+        del connection_args['include_version']
+        connection_args.update( kwargs )
+        del connection_args['version']
+        return connection_args
     else:
         # create a session argument
         insecure = kwargs['insecure']
         del kwargs['insecure']
-        auth = v3ident.Password( **kwargs )
-        sess = session.Session( auth=auth, verify=not insecure )
+        if 'version' in kwargs:
+            del kwargs['version']
+        authn = v3ident.Password( **kwargs )
+        sess = session.Session( auth=authn, verify=not insecure )
         return { 'session': sess } #, 'insecure': insecure }
 
     
@@ -176,6 +182,20 @@ def endpoint_for( client, service_type, interface='public' ):
         # TODO: how to deal with multiple service and endpoints results?
         service = client.services.list( enabled=True, type=service_type ).pop()
         return client.endpoints.list( interface=interface, enabled=True, service=service.id ).pop().url
+
+def service_client_kwargs( service, profile=None, interface='public', **connection_args ):
+    '''
+    retrieve appropriate arguments for an openstack client
+    '''
+    # the order of things for v2 is rather awkward as we need the keystone object first and then pass a token
+    kwargs = get_service_client_args( profile=profile, include_version=True, **connection_args )
+    authn = auth( profile=profile, **kwargs )
+    kwargs.update( { 'endpoint_url': endpoint_for( authn, service, interface=interface ) } )
+    if HAS_KEYSTONE == 2:
+        kwargs.update( { 'token': authn.auth_token } )
+    LOG.warn("CLIENT: %s" % (kwargs,))
+    return kwargs
+    
 
 def ec2_credentials_create(user_id=None, name=None,
                            tenant_id=None, tenant=None,

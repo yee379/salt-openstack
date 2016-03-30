@@ -115,7 +115,8 @@ def keystone_auth( by_ip=False ):
     for z,d in ks['url'].iteritems():
         context[z] = _service_endpoint( ks, c, z, local_or_service='service', include_path=False )
         context['%s_with_path'%(z,)] = _service_endpoint( ks, c, z, local_or_service='service', include_path=True )
-        # create dynamic variable based on keystone version requested
+        context['%s_with_version'%(z,)] = _service_endpoint( ks, c, z, local_or_service='service', path_is_version=True )
+    # create dynamic variable based on keystone version requested
     context['auth_url'] = context['admin'] if ks_version == 'v2.0' else context['admin_with_path']
     return context
     

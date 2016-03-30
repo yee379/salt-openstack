@@ -68,10 +68,10 @@ def _auth(profile=None, **connection_args):
     '''
     Set up keystone credentials
     '''
-    kstone = __salt__['keystone.auth'](profile, **connection_args)
-    endpoint = __salt__['keystone.endpoint_for']( kstone, 'image' )
-    kwargs = __salt__['keystone.get_service_client_args']( kstone, **connection_args )
-    return client.Client( '1', endpoint=endpoint, **kwargs )
+    api_kwargs = __salt__['keystone.service_client_kwargs']( 'image', **connection_args )
+    api_kwargs['endpoint'] = api_kwargs['endpoint_url']
+    del api_kwargs['endpoint_url']
+    return client.Client( version=1, **api_kwargs )
 
 def image_create(profile=None, **connection_args):
     '''

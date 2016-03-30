@@ -55,7 +55,7 @@ heat_domain_create:
         export OS_USERNAME=admin && \
         export OS_TENANT_NAME=admin && \
         export OS_PASSWORD={{ admin_users['admin']['password'] }} && \
-        export OS_AUTH_URL={{ keystone['openstack_services']['keystone']['endpoint']['adminurl'].format(openstack_parameters['controller_ip']) }} && \
+        export OS_AUTH_URL={{ keystone_auth['admin_with_version'] }} && \
         heat-keystone-setup-domain {% if salt['pillar.get']( 'ssl_insecure', False ) %} --insecure {% endif %}\
           --stack-user-domain-name heat_user_domain \
           --stack-domain-admin heat_domain_admin \

@@ -87,10 +87,8 @@ def _autheticate(func_name):
                 connection_args.update({kwarg: kwargs[kwarg]})
             elif '__' not in kwarg:
                 nkwargs.update({kwarg: kwargs[kwarg]})
-        kstone = __salt__['keystone.auth'](**connection_args)
-        endpoint = __salt__['keystone.endpoint_for']( kstone, 'network' )
-        api_kwargs = __salt__['keystone.get_service_client_args']( kstone, **kwargs )
-        neutron_interface = client.Client( endpoint_url=endpoint, **api_kwargs )
+        api_kwargs = __salt__['keystone.service_client_kwargs']( 'network', **connection_args )
+        neutron_interface = client.Client(  **api_kwargs )
         return_data = func_name(neutron_interface, *args, **nkwargs)
         if isinstance(return_data, list):
             # format list as a dict for rendering
