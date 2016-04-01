@@ -11,23 +11,24 @@ services:
     service_type: identity
     description: 'Openstack Identity'
     version: v3
+    # version: v2.0
     url:
       internal:
         https: True
         local_port: 15000
         service_port: 5000
-        path: v3
+        # path: v2.0
       public:
         https: True
         local_port: 15000
         service_port: 5000
-        path: v3
+        # path: v2.0
       admin:
         https: True
         local_port: 45357
         service_port: 35357
-        path: v3
-
+        # path: v2.0
+        
   glance:
     service_type: image
     description: OpenStack Image service
@@ -132,19 +133,19 @@ services:
     version: v1
     url:
       admin:
-        https: False
+        https: True
         local_port: 8004
-        service_port: 8004
+        service_port: 18004
         path: v1/%(tenant_id)s
       internal:
-        https: False
+        https: True
         local_port: 8004
-        service_port: 8004
+        service_port: 18004
         path: v1/%(tenant_id)s
       public:
-        https: False
+        https: True
         local_port: 8004
-        service_port: 8004
+        service_port: 18004
         path: v1/%(tenant_id)s
       
   'heat-cfn':
@@ -153,19 +154,19 @@ services:
     version: v1
     url:
       admin:
-        https: False
+        https: True
         local_port: 8000
-        service_port: 8000
+        service_port: 18000
         path: v1
       internal:
-        https: False
+        https: True
         local_port: 8000
-        service_port: 8000
+        service_port: 18000
         path: v1
       public:
-        https: False
+        https: True
         local_port: 8000
-        service_port: 8000
+        service_port: 18000
         path: v1
       
   novnc:
@@ -188,19 +189,20 @@ services:
 
   horizon:
     url:
-      admin:
-        https: True
-        local_port: 80
-        service_port: 443
-      internal:
-        https: True
-        local_port: 80
-        service_port: 443
       public:
         https: True
         local_port: 80
         service_port: 443
   
+  rabbitmq:
+    url:
+      internal:
+        ssl: True
+        # ssl: False
+        noproxy: True
+        local_port: 5672
+        service_port: 5671
+        
   # ceilometer:
   #   service_type: metering
   #   description: 'Telemetry Service'
