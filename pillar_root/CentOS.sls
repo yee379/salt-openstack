@@ -533,12 +533,8 @@ resources:
   haproxy:
     conf:
       haproxy: /etc/haproxy/haproxy.cfg
-    # packages:
-    #   - "haproxy"
+    packages:
+      - "haproxy"
     # services:
     #   ntp: "haproxy"
 
-  nginx:
-    conf: 
-      nginx: /etc/nginx/nginx.conf
-      dhparam: /etc/nginx/params.4096
