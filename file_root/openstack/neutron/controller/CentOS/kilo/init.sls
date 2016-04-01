@@ -3,11 +3,14 @@
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 {% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
-archive {{ neutron['conf']['neutron'] }} controller:
+archive {{ neutron['conf']['neutron'] }}:
   file.copy:
     - name: {{ neutron['conf']['neutron'] }}.orig
     - source: {{ neutron['conf']['neutron'] }}
     - unless: ls {{ neutron['conf']['neutron'] }}.orig
+
+include:
+  - openstack.neutron.message_queue.{{ openstack_parameters['series'] }}.{{ openstack_parameters['message_queue'] }}
 
 neutron_controller_conf:
   ini.options_present:
@@ -49,7 +52,7 @@ neutron_controller_conf:
           username: nova
           password: "{{ service_users['nova']['password'] }}"
     - require:
-        - file: archive {{ neutron['conf']['neutron'] }} controller
+        - file: archive {{ neutron['conf']['neutron'] }}
 {% for pkg in neutron['packages']['controller'] %}
         - pkg: neutron_controller_{{ pkg }}_install
 {% endfor %}
@@ -106,6 +109,7 @@ neutron_controller_server_running:
     - enable: True
     - name: "{{ neutron['services']['controller']['neutron_server'] }}"
     - watch:
+      - ini: neutron_rabbitmq_conf
       - ini: neutron_controller_conf
       - ini: neutron_controller_ml2_conf
 
@@ -113,5 +117,5 @@ neutron_controller_server_running:
 neutron_controller_wait:
   cmd.run:
     - name: sleep 5
-    - require:
+    - onchanges:
       - service: neutron_controller_server_running

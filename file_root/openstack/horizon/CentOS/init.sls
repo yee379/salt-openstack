@@ -48,12 +48,8 @@ horizon_setsebool_on:
 
 {% if salt['pillar.get']('horizon:https',False) %}
 
-{% set servername = salt['pillar.get']( 'horizon:servername' ) %}
-create horizon cert:
-  cmd.run:
-    - name: ./make-dummy-cert {{ servername }}.crt
-    - cwd: /etc/pki/tls/certs/
-    - unless: test -e {{ salt['pillar.get']( 'horizon:SSLCertificateFile' ) }}
+include:
+  - ssl
 
 httpd mod ssl:
   pkg.installed:
@@ -66,8 +62,10 @@ horizon httpd config:
     - template: jinja
     - source: salt://openstack/horizon/{{ grains['os'] }}/openstack-dashboard.conf
     - require:
-      - cmd: create horizon cert
+      - cmd: ensure system openstack certs
       - pkg: httpd mod ssl
+    - watch:
+      - cmd: ensure system openstack certs
 
 {% endif %}
 

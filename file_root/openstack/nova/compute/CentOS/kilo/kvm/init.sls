@@ -9,6 +9,10 @@ archive {{ nova['conf']['nova'] }} compute:
     - source: {{ nova['conf']['nova'] }} 
     - unless: ls {{ nova['conf']['nova'] }}.orig
 
+include:
+  - openstack.nova.message_queue.{{ openstack_parameters['series'] }}.{{ openstack_parameters['message_queue'] }}
+  - openstack.nova.policy_json
+  
 {% set minion_ip = salt['openstack_utils.minion_ip'](grains['id']) %}
 nova_compute_conf:
   ini.options_present:
@@ -62,17 +66,16 @@ nova_compute_conf:
         - pkg: nova_compute_{{ pkg }}_install
 {% endfor %}
 
-include:
-  - openstack.nova.policy_json
-
 {% for service in nova['services']['compute']['kvm'] %}
 nova_compute_{{ service }}_running:
   service.running:
     - enable: True
     - name: {{ nova['services']['compute']['kvm'][service] }}
     - require:
+      - ini: nova_rabbitmq_conf
       - ini: nova_compute_conf
     - watch:
+      - ini: nova_rabbitmq_conf
       - ini: nova_compute_conf
       - file: push policy.json configuration
 {% endfor %}
@@ -90,7 +93,7 @@ nova_compute_sqlite_delete:
 nova_compute_wait:
   cmd.run:
     - name: sleep 5
-    - require:
+    - onchanges:
 {% for service in nova['services']['compute']['kvm'] %}
       - service: nova_compute_{{ service }}_running
 {% endfor %}

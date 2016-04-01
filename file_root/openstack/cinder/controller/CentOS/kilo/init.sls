@@ -19,7 +19,10 @@ archive {{ cinder['conf']['cinder'] }}:
     - name: {{ cinder['conf']['cinder'] }}.orig
     - source: {{ cinder['conf']['cinder'] }}
     - unless: ls {{ cinder['conf']['cinder'] }}.orig
-    
+
+include:
+  - openstack.cinder.message_queue.{{ openstack_parameters['series'] }}.{{ openstack_parameters['message_queue'] }}
+
 cinder_controller_conf:
   ini.options_present:
     - name: "{{ cinder['conf']['cinder'] }}"
@@ -70,6 +73,7 @@ cinder_controller_{{ service }}_running:
     - enable: True
     - name: {{ cinder['services']['controller'][service] }}
     - watch:
+      - ini: cinder_rabbitmq_conf
       - ini: cinder_controller_conf
 {% endfor %}
 
@@ -77,7 +81,7 @@ cinder_controller_{{ service }}_running:
 cinder_controller_wait:
   cmd.run:
     - name: sleep 5
-    - require:
+    - onchange:
 {% for service in cinder['services']['controller'] %}
       - service: cinder_controller_{{ service }}_running
 {% endfor %}

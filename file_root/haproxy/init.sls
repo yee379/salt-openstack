@@ -4,28 +4,30 @@
 
 ensure haproxy is installed:
   pkg.installed:
-    - name: haproxy
+    {% for package in salt['pillar.get']('resources:haproxy:packages') %}
+    - name: {{ package }}
+    {% endfor %}
 
-{% set ssl_cert_path = salt['pillar.get']('haproxy:ssl_cert:dir') + salt['pillar.get']('haproxy:ssl_cert:file') %}
-ensure openstack certs:
-  cmd.run:
-    - name: ./make-dummy-cert {{ ssl_cert_path }}
-    - cwd: /etc/pki/tls/certs/
-    - unless: test -e {{ ssl_cert_path }}
+include:
+  - ssl
 
-# jinja template haproxy config file for all services
+{% set ssl = salt['openstack_utils.ssl_cert']() %}
 haproxy configuration file:
   file.managed:
     - name: {{ salt['pillar.get']( 'resources:haproxy:conf:haproxy' ) }}
     - source: salt://haproxy/etc/haproxy.cfg
     - template: jinja
     - defaults:
-        ssl_cert_path: {{ ssl_cert_path }}
+        ssl_cert_path: {{ ssl['pem'] }}
         controllers:
           - {{ salt['pillar.get']( 'controller' ) }}
     - user: root
     - group: root
     - mode: 644
+    - require:
+      - file: ensure system openstack certs
+    - watch:
+      - file: ensure system openstack certs
     
 ensure haproxy is running:
   service.running:

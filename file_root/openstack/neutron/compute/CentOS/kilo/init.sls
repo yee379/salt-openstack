@@ -23,6 +23,9 @@ archive {{ neutron['conf']['neutron'] }} compute:
     - name: {{ neutron['conf']['neutron'] }}.orig
     - source: {{ neutron['conf']['neutron'] }}
     - unless: ls {{ neutron['conf']['neutron'] }}.orig
+    
+include:
+    - openstack.neutron.message_queue.{{ openstack_parameters['series'] }}.{{ openstack_parameters['message_queue'] }}
 
 neutron_compute_conf:
   ini.options_present:
@@ -124,6 +127,7 @@ neutron_compute_{{ service }}_running:
     - enable: True
     - name: "{{ neutron['services']['compute']['kvm'][service] }}"
     - watch:
+      - ini: neutron_rabbitmq_conf
       - ini: neutron_compute_conf
       - ini: neutron_compute_ml2_conf
 {% endfor %}

@@ -16,7 +16,9 @@ heat_conf_create:
       - pkg: heat_{{ pkg }}_install
 {% endfor %}
 
-
+include:
+  - openstack.heat.message_queue.{{ openstack_parameters['series'] }}.{{ openstack_parameters['message_queue'] }}
+    
 heat_conf:
   ini.options_present:
     - name: "{{ heat['conf']['heat'] }}"
@@ -84,8 +86,10 @@ heat_service_{{ service }}_running:
     - name: {{ heat['services'][service] }}
     - enable: True
     - require:
+      - ini: heat_rabbitmq_conf
       - cmd: heat_db_sync
     - watch:
+      - ini: heat_rabbitmq_conf
       - ini: heat_conf
 {% endfor %}
 
@@ -93,7 +97,7 @@ heat_service_{{ service }}_running:
 heat_wait:
   cmd.run:
     - name: sleep 5
-    - require:
+    - onchanges:
 {% for service in heat['services'] %}
       - service: heat_service_{{ service }}_running
 {% endfor %}

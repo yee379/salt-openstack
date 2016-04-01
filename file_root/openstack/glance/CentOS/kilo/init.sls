@@ -8,7 +8,10 @@ archive {{ glance['conf']['api'] }}:
     - name: {{ glance['conf']['api'] }}.orig
     - source: {{ glance['conf']['api'] }}
     - unless: ls {{ glance['conf']['api'] }}.orig
-    
+
+include:
+  - openstack.glance.message_queue.{{ openstack_parameters['series'] }}.{{ openstack_parameters['message_queue'] }}
+
 {% set ssl_cert_path = salt['pillar.get']('haproxy:ssl_cert:dir') + salt['pillar.get']('haproxy:ssl_cert:file') %}
 glance_api_conf:
   ini.options_present:
@@ -118,6 +121,7 @@ glance_api_running:
       - cmd: glance_db_sync
     - watch:
       - ini: glance_api_conf
+      - ini: glance_rabbitmq_conf
 
 glance_sqlite_delete:
   file.absent:

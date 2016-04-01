@@ -3,6 +3,9 @@
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 {% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 
+include:
+  - openstack.cinder.message_queue.{{ openstack_parameters['series'] }}.{{ openstack_parameters['message_queue'] }}
+
 cinder_storage_conf:
   ini.options_present:
     - name: "{{ cinder['conf']['cinder'] }}"

@@ -10,6 +10,10 @@ archive {{ nova['conf']['nova'] }} controller:
     - source: {{ nova['conf']['nova'] }} 
     - unless: ls {{ nova['conf']['nova'] }}.orig
 
+include:
+  - openstack.nova.message_queue.{{ openstack_parameters['series'] }}.{{ openstack_parameters['message_queue'] }}
+  - openstack.nova.policy_json
+
 {% set minion_ip = salt['openstack_utils.minion_ip'](grains['id']) %}
 nova_controller_conf:
   ini.options_present:
@@ -83,9 +87,6 @@ nova_controller_sqlite_delete:
     - require:
       - cmd: nova_db_sync
 
-include:
-  - openstack.nova.policy_json
-
 {% for service in nova['services']['controller'] %}
 nova_controller_{{ service }}_running:
   service.running:
@@ -93,9 +94,11 @@ nova_controller_{{ service }}_running:
     - name: "{{ nova['services']['controller'][service] }}"
     - require:
       - cmd: nova_db_sync
+      - ini: nova_rabbitmq_conf
       - ini: nova_controller_conf
     - watch:
       - ini: nova_controller_conf
+      - ini: nova_rabbitmq_conf
       - file: push policy.json configuration
 {% endfor %}
 
@@ -104,7 +107,7 @@ nova_controller_wait:
   cmd:
     - run
     - name: sleep 5
-    - require:
+    - onchanges:
 {% for service in nova['services']['controller'] %}
       - service: nova_controller_{{ service }}_running
 {% endfor %}

@@ -138,9 +138,6 @@ def service_urls( service, fqdn=controller, by_ip=False ):
         context['version'] = d['version']
     return context
 
-def ssl_cert( service=None ):
-    return __salt__['pillar.get']('haproxy:ssl_cert:dir') + __salt__['pillar.get']('haproxy:ssl_cert:file')
-
 def _openstack_service_context(openstack_service):
     series = openstack_series()
     context = __salt__['pillar.get']('resources:%s:openstack_series:%s' % \
@@ -655,13 +652,36 @@ def mysql():
     })
     return context
 
-
+def ssl_cert():
+    dir = __salt__['pillar.get']('ssl_cert:dir')
+    name = __salt__['pillar.get']('ssl_cert:file')
+    context = {
+        'dir': dir,
+        'name': name,
+    }
+    for i in ( 'pem', 'crt', 'key', 'ca' ):
+        context[i] = dir + '/' + name + '.' + i
+    return context
+    
 def rabbitmq():
     context = __salt__['pillar.get']('resources:rabbitmq')
     context.update({
         'user_name': __salt__['pillar.get']('rabbitmq:user_name'),
         'user_password': __salt__['pillar.get']('rabbitmq:user_password'),
+        'port': __salt__['pillar.get']('services:rabbitmq:url:internal:local_port',5672),
+        'service_port': __salt__['pillar.get']('services:rabbitmq:url:internal:local_port',5672),
+        'ssl_enable': __salt__['pillar.get']('services:rabbitmq:url:internal:ssl', False),
     })
+    if context['ssl_enable']:
+        ssl = ssl_cert()
+        context.update({
+            'ssl_port': __salt__['pillar.get']('services:rabbitmq:url:internal:service_port',5671),
+            'service_port': __salt__['pillar.get']('services:rabbitmq:url:internal:service_port',5671),
+            'ssl_pem_path': ssl['pem'],
+            'ssl_ca_path': ssl['ca'],
+            'ssl_crt_path': ssl['crt'],
+            'ssl_key_path': ssl['key']
+        })
     return context
 
 
@@ -770,8 +790,11 @@ def haproxy_services( ):
             if not 'https' in data:
                 data['https'] = False
             # only bother proxying if the ports are different
-            if not data['local_port'] == data['service_port'] \
-                and not data in ports: # if port spec has not already been seen
+            noproxy = data['noproxy'] if 'noproxy' in data and data['noproxy'] else False
+            if not noproxy and \
+                ( 'local_port' in data and 'service_port' in data \
+                and not data['local_port'] == data['service_port'] \
+                and not data in ports ): # if port spec has not already been seen
                     ports.append( data )
         for p in ports:
             if not p['service_port'] in seen_ports:

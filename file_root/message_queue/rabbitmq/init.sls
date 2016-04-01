@@ -7,6 +7,43 @@ rabbitmq_{{ pkg }}_install:
     - name: {{ pkg }}
 {% endfor %}
 
+backup rabbitmq configuration:
+  file.copy:
+    - name: /etc/rabbitmq/rabbitmq.config.orig
+    - source: /etc/rabbitmq/rabbitmq.config
+    - unless: ls /etc/rabbitmq/rabbitmq.config.orig
+  
+include:
+  - ssl
+
+{% set ssl_enable = salt['pillar.get']( 'services:rabbitmq:url:internal:ssl', False ) %}
+{% set ssl_cert_path = salt['openstack_utils.ssl_cert']() %}
+rabbitmq configuration:
+  file.managed:
+    - source: salt://message_queue/rabbitmq/rabbitmq.config
+    - name: /etc/rabbitmq/rabbitmq.config
+    - user: root
+    - group: root
+    - mode: 644
+    - template: jinja
+    - defaults:
+        port: {{ rabbitmq['port'] }}
+        ssl_enable: {{ rabbitmq['ssl_enable'] }}
+{% if rabbitmq['ssl_enable'] %}
+        ssl_port: {{ rabbitmq['ssl_port'] }}
+        # cacert_file: {{ rabbitmq['ssl_crt_path'] }}
+        cert_file: {{ rabbitmq['ssl_crt_path'] }}
+        key_file: {{ rabbitmq['ssl_key_path'] }}
+        verify: verify_none
+        fail_if_no_peer_cert: 'false'
+{% else %}
+{% endif %}
+    - require:
+      - file: backup rabbitmq configuration
+{% if ssl_enable %}
+      - file: ensure system openstack certs
+{% endif %}
+      
 rabbitmq environment configurations:
   file.managed:
     - source: salt://message_queue/rabbitmq/rabbitmq-env.conf
@@ -24,6 +61,10 @@ rabbitmq_{{ service }}_running:
   {% for pkg in rabbitmq['packages'] %}
       - pkg: rabbitmq_{{ pkg }}_install
   {% endfor %}
+      - file: rabbitmq configuration
+      - file: rabbitmq environment configurations
+    - watch:
+      - file: rabbitmq configuration
       - file: rabbitmq environment configurations
 {% endfor %}
 
