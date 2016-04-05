@@ -1,0 +1,21 @@
+--- utils.py.orig	2016-04-05 19:40:22.403848481 -0400
++++ utils.py	2016-04-05 19:42:24.335644862 -0400
+@@ -288,6 +288,18 @@
+     authentication. Fix the URL to say v3. This should be smarter and take the
+     base, unversioned URL and discovery.
+     """
++
++    # make sure there's a version at the end of the url
++    bits = auth_url.split('/')
++    if not len(bits) == 4:
++        # append the version based on get_keystone_version()
++        v = get_keystone_version()
++        if v == 2:
++            v = '2.0'
++        auth_url = auth_url + '/v%s' % v
++    elif not bits[-1][0] == 'v':
++        LOG.warning("The settings.py file contains an ambiguous keystone endpoint version.")
++
+     if get_keystone_version() >= 3:
+         if has_in_url_path(auth_url, "/v2.0"):
+             LOG.warning("The settings.py file points to a v2.0 keystone "
