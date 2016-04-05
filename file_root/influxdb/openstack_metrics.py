@@ -1,8 +1,8 @@
 #!/bin/env python
 
-from keystoneclient.auth.identity import v2
+from keystoneclient.auth.identity import v3 as v3ident
 from keystoneclient import session
-import keystoneclient.v2_0.client as ksclient
+from keystoneclient.v3 import client as v3client
 import novaclient.v2.client as nvclient
 # import glanceclient.v2.client as glclient
 
@@ -135,6 +135,8 @@ if __name__ == '__main__':
     parser.add_argument( '--password', help="openstack password", action=EnvDefault, envvar='OS_PASSWORD' )
     parser.add_argument( '--auth_url', help="auth url", action=EnvDefault, envvar='OS_AUTH_URL' )
     parser.add_argument( '--tenant_name', help="openstack tenant name", action=EnvDefault, envvar='OS_TENANT_NAME' )
+    parser.add_argument( '--user_domain_name', help="openstack user domain name", action=EnvDefault, envvar='OS_USER_DOMAIN_NAME' )
+    parser.add_argument( '--project_domain_name', help="openstack domain name", action=EnvDefault, envvar='OS_PROJECT_DOMAIN_NAME' )
     parser.add_argument( '--dry_run', help="do not send data", default=False, action='store_true' )
     parser.add_argument( '--verbose', help="verbose", default=False, action='store_true' )
     parser.add_argument( '--insecure', help="ignore ssl certs", default=False, action='store_true' )
@@ -142,26 +144,30 @@ if __name__ == '__main__':
 
     opts = vars(parser.parse_args(argv[1:]))
 
+    if 'verbose' in opts and opts['verbose']:
+        logging.basicConfig(level=logging.DEBUG)
+
     if os.path.isfile( opts['password'] ):
         with open( opts['password'] ) as f:
             opts['password'] = f.readlines().pop(0).strip()
 
     # get authn
-    auth = v2.Password( username=opts['username'], password=opts['password'], auth_url=opts['auth_url'], tenant_name=opts['tenant_name'] )
+    auth = v3ident.Password( username=opts['username'], password=opts['password'], auth_url=opts['auth_url'], project_name=opts['tenant_name'], user_domain_name=opts['user_domain_name'], project_domain_name=opts['project_domain_name'] )
     sess = session.Session( auth=auth, verify=not opts['insecure'] )
-    keystone = ksclient.Client( session=sess, verify=False, insecure=opts['insecure'] )
+    keystone = v3client.Client( session=sess, verify=False, insecure=opts['insecure'] )
 
     # get list of tenants
     tenants = {}
-    for t in keystone.tenants.list():
+    for t in keystone.projects.list():
         logging.debug("found tenant: %s" % (t.to_dict(),))
         tenants[t.id] = t.name
+    logging.debug("TENANTS: %s" % (tenants,))
 
     # get list of users
     users = {}
     for u in keystone.users.list():
         logging.debug("found user: %s" % (u.to_dict(),))
-        users[u.id] = u.username
+        users[u.id] = u.name
 
     # TODO: get list of images
     images = {}

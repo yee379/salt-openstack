@@ -9,8 +9,8 @@ ensure metrics script is installed:
 cron to poll for metrics:
   cron.present:
     - user: root
-    - name: 'source /root/keystonerc_admin; /usr/bin/openstack_metrics.py --insecure'
-    - minute: '5'
+    - name: 'source /root/keystonerc_monitoring; /usr/bin/openstack_metrics.py --insecure'
+    - minute: '*'
     - hour: '*'
     - daymonth: '*'
     - month: '*'
