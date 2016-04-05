@@ -68,7 +68,7 @@ openvswitch_promisc_interfaces_enable:
 openvswitch_br-proxy_network_script:
   ini.options_present:
     - name: "{{ openvswitch['conf']['network_scripts'] }}/ifcfg-br-proxy"
-    # - unless: "ls {{ openvswitch['conf']['network_scripts'] }}/ifcfg-br-proxy"
+    - unless: "ls {{ openvswitch['conf']['network_scripts'] }}/ifcfg-br-proxy"
     - sections:
         DEFAULT_IMPLICIT:
           DEVICE: br-proxy
@@ -100,7 +100,7 @@ openvswitch_{{ neutron['single_nic']['interface'] }}_ovs_port_network_script:
 
 {% for interface in neutron['single_nic']['disable_interfaces'] %}
 disable network interface {{ interface }}:
-  init.options_present:
+  ini.options_present:
     - name: "{{ openvswitch['conf']['network_scripts'] }}/ifcfg-{{ interface }}"
     - sections:
         DEFAULT_IMPLICIT:
