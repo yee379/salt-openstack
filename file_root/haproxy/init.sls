@@ -21,6 +21,8 @@ haproxy configuration file:
         ssl_cert_path: {{ ssl['pem'] }}
         controllers:
           - {{ salt['pillar.get']( 'controller' ) }}
+        admin_password: {{ salt['pillar.get']( 'haproxy:admin_password' ) }}
+        tune_bufsize: {{ salt['pillar.get']( 'haproxy:bufsize', 16384 ) }}
     - user: root
     - group: root
     - mode: 644
