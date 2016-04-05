@@ -19,6 +19,15 @@ SESSION_COOKIE_SECURE = True
 OPENSTACK_SSL_NO_VERIFY = {{ ssl_insecure }}
 {% endif %}
 
+{% if grains['os'] == 'Ubuntu' %}
+WEBROOT = '/horizon/'
+LOGIN_URL='/horizon/auth/login/'
+LOGOUT_URL='/horizon/auth/logout/'
+# LOGIN_REDIRECT_URL can be used as an alternative for
+# HORIZON_CONFIG.user_home, if user_home is not set.
+# Do not set it to '/home/', as this will cause circular redirect loop
+LOGIN_REDIRECT_URL='/horizon'
+{% else %}
 WEBROOT = '/dashboard/'
 LOGIN_URL='/dashboard/auth/login/'
 LOGOUT_URL='/dashboard/auth/logout/'
@@ -26,6 +35,7 @@ LOGOUT_URL='/dashboard/auth/logout/'
 # HORIZON_CONFIG.user_home, if user_home is not set.
 # Do not set it to '/home/', as this will cause circular redirect loop
 LOGIN_REDIRECT_URL='/dashboard'
+{% endif %}
 
 # Overrides for OpenStack API versions. Use this setting to force the
 # OpenStack dashboard to use a specific API version for a given service API.
@@ -34,9 +44,9 @@ LOGIN_REDIRECT_URL='/dashboard'
 # service API. For example, The identity service APIs have inconsistent
 # use of the decimal point, so valid options would be 2.0 or 3.
 OPENSTACK_API_VERSIONS = {
-#    "data-processing": 1.1,
+   "data-processing": 1.1,
    "identity": 3,
-#    "volume": 2,
+   "volume": 2,
 }
 
 # Set this to True if running on multi-domain model. When this is enabled, it
@@ -156,6 +166,7 @@ OPENSTACK_KEYSTONE_BACKEND = {
 OPENSTACK_HYPERVISOR_FEATURES = {
     'can_set_mount_point': False,
     'can_set_password': False,
+    'requires_keypair': False,
 }
 OPENSTACK_CINDER_FEATURES = {
     'enable_backup': False,
@@ -169,8 +180,35 @@ OPENSTACK_NEUTRON_NETWORK = {
     'enable_lb': True,
     'enable_firewall': True,
     'enable_vpn': True,
+    'enable_fip_topology_check': True,
+
+    # Neutron can be configured with a default Subnet Pool to be used for IPv4
+    # subnet-allocation. Specify the label you wish to display in the Address
+    # pool selector on the create subnet step if you want to use this feature.
+    'default_ipv4_subnet_pool_label': None,
+
+    # Neutron can be configured with a default Subnet Pool to be used for IPv6
+    # subnet-allocation. Specify the label you wish to display in the Address
+    # pool selector on the create subnet step if you want to use this feature.
+    # You must set this to enable IPv6 Prefix Delegation in a PD-capable
+    # environment.
+    'default_ipv6_subnet_pool_label': None,
+
+    # The profile_support option is used to detect if an external router can be
+    # configured via the dashboard. When using specific plugins the
+    # profile_support can be turned on if needed.
     'profile_support': None,
+
+    # Set which provider network types are supported. Only the network types
+    # in this list will be available to choose from when creating a network.
+    # Network types include local, flat, vlan, gre, and vxlan.
     'supported_provider_types': ['*'],
+
+    # Set which VNIC types are supported for port binding. Only the VNIC
+    # types in this list will be available to choose from when creating a
+    # port.
+    # VNIC types include 'normal', 'macvtap' and 'direct'.
+    # Set to empty list or None to disable VNIC type selection.
     'supported_vnic_types': ['*']
 }
 
@@ -203,14 +241,31 @@ IMAGE_CUSTOM_PROPERTY_TITLES = {
     "image_type": _("Image Type"),
 }
 IMAGE_RESERVED_CUSTOM_PROPERTIES = []
-API_RESULT_LIMIT = 1000
-API_RESULT_PAGE_SIZE = 20
+
+# The number of objects (Swift containers/objects or images) to display
+# on a single page before providing a paging element (a "more" link)
+# to paginate results.
+API_RESULT_LIMIT = {{ api_result_limit }}
+API_RESULT_PAGE_SIZE = {{ api_result_page_size }}
+
+# The size of chunk in bytes for downloading objects from Swift
 SWIFT_FILE_TRANSFER_CHUNK_SIZE = 512 * 1024
+
+# Specify a maximum number of items to display in a dropdown.
 DROPDOWN_MAX_ITEMS = 30
+
+# The timezone of the server. This should correspond with the timezone
+# of your entire OpenStack installation, and hopefully be in UTC.
 TIME_ZONE = "UTC"
+
 {% if grains['os'] == 'CentOS' %}
 POLICY_FILES_PATH = '/etc/openstack-dashboard'
 {% endif %}
+
+# Change this patch to the appropriate static directory containing
+# two files: _variables.scss and _styles.scss
+#CUSTOM_THEME_PATH = 'themes/default'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -418,6 +473,4 @@ SECURITY_GROUP_RULES = {
     },
 }
 REST_API_REQUIRED_SETTINGS = ['OPENSTACK_HYPERVISOR_FEATURES']
-{% if grains['os'] == 'Ubuntu' %}
-WEBROOT = '/horizon'
-{% endif %}
+

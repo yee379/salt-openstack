@@ -19,6 +19,8 @@ horizon_local_settings:
         multidomain: False
         default_domain: Default
         debug: {{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}
+        api_result_limit: 1000
+        api_result_page_size: 50
     - require:
 {% for pkg in horizon['packages'] %}
       - pkg: horizon_{{ pkg }}_install
