@@ -71,6 +71,30 @@ horizon httpd config:
 
 {% endif %}
 
+backup openstack_auth utils file:
+  file.copy:
+    - name: /usr/lib/python2.7/site-packages/openstack_auth/utils.py.orig
+    - source: /usr/lib/python2.7/site-packages/openstack_auth/utils.py
+    - unless: /usr/lib/python2.7/site-packages/openstack_auth/utils.py.orig
+    
+ensure patch program installed:
+  pkg.installed:
+    - name: patch
+
+# only really valid for liberty
+patch keystone v3 projects list bug:
+  file.patch:
+    - name: /usr/lib/python2.7/site-packages/openstack_auth/utils.py
+    - source: salt://openstack/horizon/{{ grains['os'] }}/openstack_auth-utils.patch
+    - dry_run_first: True
+    - hash: md5=c0805c29cbd288637f0da426973d6d2c
+    - require:
+      - file: backup openstack_auth utils file
+      - pkg: ensure patch program installed
+    - onlyif: rpm -q --quiet python2-django-openstack-auth-2.0.1-1.el7.noarch
+    - watch_in:
+      - service: horizon_httpd_running
+
 {% for service in horizon['services'] %}
 horizon_{{ service }}_running:
   service.running:

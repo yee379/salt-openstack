@@ -1,5 +1,5 @@
-environment_name: "vagrant"
-openstack_series: "liberty"
+environment_name: vagrant
+openstack_series: liberty
 
 db_engine: "mysql"
 message_queue_engine: "rabbitmq"
@@ -9,7 +9,7 @@ debug_mode: True
 # ignore certificate validation checks
 ssl_insecure: True
 
-system_upgrade: False
+system_upgrade: True
 reset: ~
 
 # add proxy for yum installs etc.
