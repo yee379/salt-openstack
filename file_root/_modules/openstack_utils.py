@@ -379,7 +379,11 @@ def vlan_networks():
     vlan_physnets = __salt__['pillar.get']('neutron:type_drivers:'
                                            'vlan:physnets', default=[])
     for physnet in vlan_physnets:
-        if __salt__['grains.get']('id') in vlan_physnets[physnet]['hosts']:
+        # if this is the controller, then add all networks
+        add = __salt__['grains.get']('id') in vlan_physnets[physnet]['hosts']
+        if __salt__['grains.get']('id') in __salt__['pillar.get']('network'):
+            add = True
+        if add:
             if 'vlan_range' in vlan_physnets[physnet]:
                 network = ':'.join([physnet, vlan_physnets[physnet]['vlan_range']])
                 vlan_networks.append(network)
