@@ -39,11 +39,9 @@ cinder_controller_conf:
           connection: "mysql://{{ cinder['database']['username'] }}:{{ cinder['database']['password'] }}@{{ openstack_parameters['controller_ip'] }}/{{ cinder['database']['db_name'] }}"
         keystone_authtoken: 
           insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
-          auth_uri: {{ keystone_auth['public'] }}
+          auth_uri: {{ keystone_auth['public_with_version'] }}
           auth_url: {{ keystone_auth['admin'] }}
           auth_plugin: "password"
-          project_domain_id: "default"
-          user_domain_id: "default"
           project_name: "service"
           username: "cinder"
           password: "{{ service_users['cinder']['password'] }}"
@@ -53,12 +51,34 @@ cinder_controller_conf:
       - file: archive {{ cinder['conf']['cinder'] }}
       - file: cinder_conf_create
 
+archive {{ cinder['conf']['api_paste'] }}:
+  file.copy:
+    - name: {{ cinder['conf']['api_paste'] }}.orig
+    - source: {{ cinder['conf']['api_paste'] }}
+    - unless: ls {{ cinder['conf']['api_paste'] }}.orig
+
+cinder api paste config:
+  file.managed:
+    - name: "{{ cinder['conf']['api_paste'] }}"
+    - source: salt://openstack/cinder/controller/api-paste.ini
+    - template: jinja
+    - group: cinder
+    - defaults:
+        auth_plugin: password
+        auth_url: {{ keystone_auth['admin'] }}
+        username: cinder
+        password: "{{ service_users['cinder']['password'] }}"
+        project_name: service
+        user_domain_name: Default
+        project_domain_name: Default
+    - require:
+      - file: archive {{ cinder['conf']['api_paste'] }}
+        
 cinder_db_sync:
   cmd.run:
     - name: "su -s /bin/sh -c 'cinder-manage db sync' cinder"
     - require:
       - ini: cinder_controller_conf
-
 
 cinder_controller_sqlite_delete:
   file.absent:
@@ -75,6 +95,7 @@ cinder_controller_{{ service }}_running:
     - watch:
       - ini: cinder_rabbitmq_conf
       - ini: cinder_controller_conf
+      - file: cinder api paste config
 {% endfor %}
 
 
