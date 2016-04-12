@@ -7,3 +7,4 @@ include:
   - openstack.keystone.tenants
   - openstack.keystone.users
   - openstack.keystone.services
+  - openstack.keystone.domains

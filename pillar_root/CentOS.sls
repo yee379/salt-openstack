@@ -406,6 +406,7 @@ resources:
           cinder: "/etc/cinder/cinder.conf"
           losetup_systemd: "/lib/systemd/system/openstack-losetup.service"
           cinder_conf_dist: "/usr/share/cinder/cinder-dist.conf"
+          api_paste: "/etc/cinder/api-paste.ini"
         packages:
           controller:
             - "openstack-cinder"

@@ -35,6 +35,10 @@ keystone_conf:
           driver: "keystone.token.persistence.backends.memcache.Token"
         revoke:
           driver: "keystone.contrib.revoke.backends.sql.Revoke"
+        cache:
+          enabled: True
+          backend: dogpile.cache.memcached
+          backend_argument: url:127.0.0.1:11211
     - require:
       - file: archive {{ keystone['conf']['keystone'] }}
 {% for pkg in keystone['packages'] %}

@@ -16,8 +16,8 @@ horizon_local_settings:
         ssl_insecure: {{ salt['pillar.get']('ssl_insecure', False ) }}
         secret_key: {{ salt['pillar.get']('horizon:secret_key', salt['random.get_str']() ) }}
         keystone_url: {{ keystone_auth['public_with_version'] }}
-        multidomain: False
-        default_domain: Default
+        multidomain: {{ salt['pillar.get']( 'horizon:multidomain', True ) }}
+        default_domain: {{ salt['pillar.get']( 'horizon:default_domain', 'Default' ) }}
         debug: {{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}
         api_result_limit: 1000
         api_result_page_size: 50
