@@ -146,6 +146,7 @@ if __name__ == '__main__':
 
     if 'verbose' in opts and opts['verbose']:
         logging.basicConfig(level=logging.DEBUG)
+        logging.info("OPTIONS: %s" % (opts,))
 
     if os.path.isfile( opts['password'] ):
         with open( opts['password'] ) as f:
@@ -165,10 +166,12 @@ if __name__ == '__main__':
 
     # get list of users
     users = {}
-    for u in keystone.users.list():
-        logging.debug("found user: %s" % (u.to_dict(),))
-        users[u.id] = u.name
-
+    domains = { d.id: d.name for d in keystone.domains.list() }
+    for domain_id, domain_name in domains.iteritems():
+        for u in keystone.users.list( domain=domain_id ):
+            logging.debug("domain: %s, User: %s" % (domain_name,u,))
+            users[u.id] = u.name
+        
     # TODO: get list of images
     images = {}
     #glance_endpoint = keystone.service_catalog.url_for(service_type='image', endpoint_type='publicURL')
@@ -189,8 +192,6 @@ if __name__ == '__main__':
     now = int(time())
     cache = []
 
-    for h in nova.hypervisors.list( detailed=True ):
-       logging.debug("h: %s " % (h.to_dict(),) )
     servers = {}
     for s in nova.servers.list( search_opts={'all_tenants': 1}, detailed=True ):
         d = s.to_dict()
@@ -203,8 +204,12 @@ if __name__ == '__main__':
             'hypervisor': d['OS-EXT-SRV-ATTR:hypervisor_hostname'],
             'image': f['name'],
             'tenant': tenants[d['tenant_id']],
-            'user': users[d['user_id']]
         }
+        
+        # find users in tenant
+        if d['user_id'] in users:
+            meta['user'] = users[d['user_id']]
+
         data = {
             'disk': f['disk'] + f['OS-FLV-EXT-DATA:ephemeral'],
             'ram': f['ram'],
