@@ -32,7 +32,7 @@ heat_conf:
           stack_domain_admin_password: {{ service_users['heat']['password'] }}
           stack_user_domain_name: heat_user_domain
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
         keystone_authtoken:
           # auth_uri: "http://{{ openstack_parameters['controller_ip'] }}:5000/v2.0"
           # identity_uri: "http://{{ openstack_parameters['controller_ip'] }}:35357"

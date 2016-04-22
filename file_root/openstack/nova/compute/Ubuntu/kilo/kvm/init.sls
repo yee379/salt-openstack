@@ -27,7 +27,7 @@ nova_compute_conf:
           vncserver_proxyclient_address: {{ minion_name }}
           novncproxy_base_url: "http://{{ openstack_parameters['controller_name'] }}:6080/vnc_auto.html"
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           network_api_class: nova.network.neutronv2.api.API
           security_group_api: neutron
           linuxnet_interface_driver: nova.network.linux_net.LinuxOVSInterfaceDriver

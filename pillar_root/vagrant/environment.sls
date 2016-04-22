@@ -4,7 +4,8 @@ openstack_series: liberty
 db_engine: "mysql"
 message_queue_engine: "rabbitmq"
 
-debug_mode: True
+debug_mode: False
+verbose_mode: True
 
 # ignore certificate validation checks
 ssl_insecure: True

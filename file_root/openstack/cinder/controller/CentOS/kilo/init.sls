@@ -31,7 +31,7 @@ cinder_controller_conf:
           my_ip: {{ openstack_parameters['controller_ip'] }}
           auth_strategy: keystone
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           glance_api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           # osapi_volume_listen: 
           osapi_volume_listen_port: {{ salt['openstack_utils.service_urls']( 'cinder', by_ip=True )['public_local_port'] }}

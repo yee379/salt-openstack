@@ -37,7 +37,7 @@ glance_api_conf:
         DEFAULT:
           notification_driver: noop
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           # bind_host: 127.0.0.1
           bind_port: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_local_port'] }}
     - require:
@@ -68,7 +68,7 @@ glance_registry_conf:
         DEFAULT:
           notification_driver: noop
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           registry_client_protocol: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_protocol'] }}
           registry_client_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           # bind_host: 127.0.0.1
@@ -83,7 +83,7 @@ glance_cache_conf:
     - sections:
         DEFAULT:
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           # registry_host: 
           # registry_port: 9191 # {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_port'] }}
           registry_client_protocol: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['public_protocol'] }}

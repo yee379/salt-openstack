@@ -28,7 +28,7 @@ nova_compute_conf:
           novncproxy_base_url: {{ salt['openstack_utils.service_urls']( 'novnc', by_ip=False )['public_with_path'] }}
           # enabled_apis: osapi_compute, metadata
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           network_api_class: nova.network.neutronv2.api.API
           security_group_api: neutron
           linuxnet_interface_driver: nova.network.linux_net.LinuxOVSInterfaceDriver

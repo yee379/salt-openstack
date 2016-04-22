@@ -267,6 +267,7 @@ def openstack_parameters():
     controller_minion_id = __salt__['pillar.get']('controller')
     parameters = {
         'debug_mode': __salt__['pillar.get']('debug_mode', default=False),
+        'verbose_mode': __salt__['pillar.get']('verbose_mode', default=False),
         'controller_ip': minion_ip(controller_minion_id),
         'controller_name': controller_minion_id,
         'reset': __salt__['pillar.get']('reset'),

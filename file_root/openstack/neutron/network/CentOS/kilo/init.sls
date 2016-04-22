@@ -29,7 +29,7 @@ neutron_network_conf:
           service_plugins: router
           allow_overlapping_ips: True
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
         keystone_authtoken: 
           auth_uri: {{ keystone_auth['public'] }}
           auth_url: {{ keystone_auth['auth_url'] }}
@@ -110,7 +110,7 @@ neutron_network_l3_agent_conf:
           gateway_external_network_id: ""
           router_delete_namespaces: True
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
     - require:
 {% for pkg in neutron['packages']['network'] %}
       - pkg: neutron_network_{{ pkg }}_install
@@ -128,7 +128,7 @@ neutron_network_dhcp_agent_conf:
           dhcp_delete_namespaces: True
           dnsmasq_config_file: {{ neutron['conf']['dnsmasq_config_file'] }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
     - require:
 {% for pkg in neutron['packages']['network'] %}
       - pkg: neutron_network_{{ pkg }}_install
@@ -162,7 +162,7 @@ neutron_network_metadata_agent_conf:
           nova_metadata_ip: {{ openstack_parameters['controller_ip'] }}
           metadata_proxy_shared_secret: {{ neutron['metadata_secret'] }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
     - require:
 {% for pkg in neutron['packages']['network'] %}
       - pkg: neutron_network_{{ pkg }}_install

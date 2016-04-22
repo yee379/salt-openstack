@@ -32,7 +32,7 @@ nova_controller_conf:
           cpu_allocation_ratio: {{ salt['pillar.get']('nova:cpu_allocation_ratio') }}
           ram_allocation_ratio: {{ salt['pillar.get']('nova:ram_allocation_ratio') }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           network_api_class: nova.network.neutronv2.api.API
           security_group_api: neutron
           linuxnet_interface_driver: nova.network.linux_net.LinuxOVSInterfaceDriver

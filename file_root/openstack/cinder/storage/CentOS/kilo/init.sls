@@ -18,7 +18,7 @@ cinder_storage_conf:
           auth_strategy: keystone
           enabled_backends: lvm
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           glance_api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
         keystone_authtoken: 
           insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}

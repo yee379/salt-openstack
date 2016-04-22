@@ -24,7 +24,7 @@ neutron_controller_conf:
           service_plugins: router
           allow_overlapping_ips: True
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           notify_nova_on_port_status_changes: True
           notify_nova_on_port_data_changes: True
           nova_url: {{ salt['openstack_utils.service_urls']( 'nova', by_ip=True )['public_with_version'] }}

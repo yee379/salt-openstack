@@ -24,7 +24,7 @@ keystone_conf:
         DEFAULT:
           admin_token: {{ keystone['admin_token'] }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
-          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
+          verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           secure_proxy_ssl_header: HTTP_X_FORWARDED_PROTO
         database:
           connection: "mysql://{{ keystone['database']['username'] }}:{{ keystone['database']['password'] }}@{{ openstack_parameters['controller_ip'] }}/{{ keystone['database']['db_name'] }}"
