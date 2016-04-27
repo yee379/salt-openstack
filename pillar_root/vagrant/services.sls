@@ -11,23 +11,19 @@ services:
     service_type: identity
     description: 'Openstack Identity'
     version: v3
-    # version: v2.0
     url:
       internal:
         https: True
         local_port: 15000
         service_port: 5000
-        # path: v2.0
       public:
         https: True
         local_port: 15000
         service_port: 5000
-        # path: v2.0
       admin:
         https: True
         local_port: 45357
         service_port: 35357
-        # path: v2.0
         
   glance:
     service_type: image
@@ -169,6 +165,27 @@ services:
         service_port: 18000
         path: v1
       
+  magnum:
+    service_type: container
+    description: Magnum Container Service
+    version: v1
+    url:
+      admin: 
+        https: False
+        local_port: 9511
+        service_port: 9511
+        path: v1
+      internal: 
+        https: False
+        local_port: 9511
+        service_port: 9511
+        path: v1
+      public: 
+        https: False
+        local_port: 9511
+        service_port: 9511
+        path: v1
+        
   novnc:
     url:
       admin:

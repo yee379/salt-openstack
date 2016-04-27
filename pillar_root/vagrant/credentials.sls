@@ -1,4 +1,4 @@
-#!yaml|gpg
+#!yaml
 
 mysql: 
   root_password: change_me
@@ -31,6 +31,10 @@ databases:
   heat:
     db_name: "heat"
     username: "heat"
+    password: change_me
+  magnum:
+    db_name: "magnum"
+    username: "magnum"
     password: change_me
       
 neutron:
@@ -82,6 +86,11 @@ keystone:
             - "admin"
           email: "openstack@slac.stanford.edu"
         heat-cfn:
+          password: change_me
+          roles:
+            - "admin"
+          email: "openstack@slac.stanford.edu"
+        magnum:
           password: change_me
           roles:
             - "admin"

@@ -481,6 +481,34 @@ resources:
         files:
           sqlite: "/var/lib/cinder/cinder.sqlite"
 
+  magnum:
+    dirs:
+      - "/var/lib/magnum"
+      - "/etc/magnum"
+    openstack_series:
+      liberty:
+        conf:
+          magnum: "/etc/magnum/magnum.conf"
+        git: 
+          openstack-magnum:
+            url: https://git.openstack.org/openstack/magnum 
+            branch: stable/liberty
+          python-magnumclient:
+            url: https://git.openstack.org/openstack/python-magnumclient
+            branch: stable/liberty
+        package-dependencies:
+          - git
+          - gcc
+          - python-devel
+          - libffi-devel
+          - openssl-devel
+        services:
+          api: "openstack-magnum"
+        #   registry: "openstack-glance-registry"
+        # files:
+        #   images_dir: "/var/lib/glance/images"
+        #   sqlite: "/var/lib/glance/glance.sqlite"
+
   heat:
     dirs:
       - "/var/lib/heat"

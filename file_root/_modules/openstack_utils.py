@@ -786,6 +786,10 @@ def cinder():
 def heat():
     return _openstack_service_context('heat')
 
+def magnum():
+    context = _openstack_service_context('magnum')
+    return context
+
 def haproxy_services( ):
     seen_ports = {}
     for s, d in __salt__['pillar.get']('services').iteritems():
