@@ -46,6 +46,20 @@ keystone:
     - "admin"
     - "heat_stack_owner"
     - "heat_stack_user"
+  domains:
+    SLAC:
+      ldap:
+        user: change_me
+        password: change_me
+        url: ldaps://example.com:636
+        use_pool: true
+        use_auth_pool: true
+        page_size: 100
+        chase_referrals: 0
+        query_scope: sub
+        user_tree_dn: DC=example,DC=com
+      identity:
+        driver: keystone.identity.backends.ldap.Identity
   tenants:
     admin:
       users:
