@@ -2,9 +2,18 @@
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 {% set keystone_service = salt['openstack_utils.service_urls']( 'keystone', by_ip=True ) %}
 
+create keystone token rc file:
+  file.managed:
+    - name: /root/keystonerc_token
+    - contents: |
+        export OS_TOKEN=`grep ^admin_token /etc/keystone/keystone.conf | awk -F'=' '{print $2}'`
+        export OS_URL={{ keystone_service['admin_with_version'] }}
+        export OS_IDENTITY_API_VERSION={{ keystone_service['version']|replace('v','') }}
+
 {% for tenant_name in keystone['openstack_tenants'] %}
   {% set tenant_users = salt['openstack_utils.openstack_users'](tenant_name) %}
   {% for user in tenant_users %}
+
 keystone_{{ user }}_user_in_{{ tenant_name }}:
   keystone:
     - user_present
@@ -18,6 +27,7 @@ keystone_{{ user }}_user_in_{{ tenant_name }}:
     - connection_endpoint: {{ keystone_service['admin_with_version'] }}
     - connection_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
     - connection_version: {{ keystone_service['version'] }}
+    - connection_domain: default
     {% if salt['openstack_utils.compare_ignore_case'](openstack_parameters['reset'], 'soft') %}
     - require:
       - cmd: keystone_reset
@@ -28,7 +38,7 @@ keystone_{{ user }}_user_in_{{ tenant_name }}:
           salt['openstack_utils.boolean_value'](tenant_users[user]['keystonerc']['create']) %}
 keystonerc_{{ user }}_in_{{ tenant_name }}_create:
   file.managed:
-    - name: {{ tenant_users[user]['keystonerc']['path'] }}
+    - name: /root/keystonerc_default:{{ user }}@{{ tenant_name }}
     - contents: |
         export OS_USERNAME={{ user }}
         export OS_PROJECT_NAME={{ tenant_name }}
@@ -44,4 +54,5 @@ keystonerc_{{ user }}_in_{{ tenant_name }}_create:
       - keystone: keystone_{{ user }}_user_in_{{ tenant_name }}
     {% endif %}
   {% endfor %}
+  
 {% endfor %}
