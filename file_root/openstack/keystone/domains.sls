@@ -24,14 +24,14 @@ ensure identity section in keystone:
       
 {% for domain, data in salt['pillar.get']('keystone:domains', {}).iteritems() %}
 
-# before restart
-# openstack --insecure domain create SLAC
-# ensure domain {{ domain }} exists:
-#  
+ensure {{ domain }} exists:
+  cmd.run:
+    - name:   source /root/keystonerc_token; openstack --insecure domain create {{ domain }}
+    - unless: source /root/keystonerc_token; openstack --insecure domain show {{ domain }}
 
-
-# openstack --insecure role add --domain SLAC --user admin admin
-
+add admin to {{ domain }} domain:
+  cmd.run:
+    - name: source /root/keystonerc_token; openstack --insecure role add --domain {{ domain }} --user admin admin
 
 ensure {{ domain }} domain configuration exists:
   ini.options_present:
@@ -46,10 +46,10 @@ ensure {{ domain }} domain configuration exists:
     - require:
       - file: /etc/keystone/domains
       - ini: ensure identity section in keystone
+      - cmd: ensure {{ domain }} exists
+      - cmd: add admin to {{ domain }} domain
     - watch_in:
       - service: restart keystone service
-
-
       
 {% endfor %}
 
