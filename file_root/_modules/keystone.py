@@ -796,7 +796,8 @@ def user_list(profile=None, **connection_args):
     '''
     kstone = auth(profile, **connection_args)
     ret = {}
-    for user in kstone.users.list():
+    domain = connection_args['connection_domain'] if 'connection_domain' in connection_args else 'default'
+    for user in kstone.users.list( domain=domain ):
         ret[user.name] = {'id': user.id,
                           'name': user.name,
                           'email': user.email,
@@ -822,7 +823,8 @@ def user_get(user_id=None, name=None, profile=None, **connection_args):
     kstone = auth(profile, **connection_args)
     ret = {}
     if name:
-        for user in kstone.users.list():
+        domain = connection_args['connection_domain'] if 'connection_domain' in connection_args else 'default'
+        for user in kstone.users.list( domain=domain ):
             if user.name == name:
                 user_id = user.id
                 break
@@ -834,6 +836,8 @@ def user_get(user_id=None, name=None, profile=None, **connection_args):
                       'email': user.email,
                       'enabled': user.enabled}
     tenant_id = getattr(user, 'tenantId', None)
+    if not tenant_id:
+        tenant_id = getattr(user,'default_project_id',None)
     if tenant_id:
         ret[user.name]['tenant_id'] = tenant_id
     return ret
@@ -910,7 +914,8 @@ def user_update(user_id=None, name=None, email=None, enabled=None,
     '''
     kstone = auth(profile, **connection_args)
     if not user_id:
-        for user in kstone.users.list():
+        domain = connection_args['connection_domain'] if 'connection_domain' in connection_args else 'default'
+        for user in kstone.users.list( domain=domain ):
             if user.name == name:
                 user_id = user.id
                 break
@@ -1123,7 +1128,8 @@ tenant_id=7167a092ece84bae8cead4bf9d15bb3b
     kstone = auth(profile, **connection_args)
     ret = {}
     if user_name:
-        for user in kstone.users.list():
+        domain = connection_args['connection_domain'] if 'connection_domain' in connection_args else 'default'
+        for user in kstone.users.list( domain=domain ):
             if user.name == user_name:
                 user_id = user.id
                 break
@@ -1135,7 +1141,7 @@ tenant_id=7167a092ece84bae8cead4bf9d15bb3b
                 break
     if not user_id or not tenant_id:
         return {'Error': 'Unable to resolve user or tenant id'}
-    roles = kstone.roles.roles_for_user(user=user_id, tenant=tenant_id) if HAS_KEYSTONE == 2 else kstone.roles.list( user=user_id, project=tenant_id, domain=domain )
+    roles = kstone.roles.roles_for_user(user=user_id, tenant=tenant_id) if HAS_KEYSTONE == 2 else kstone.roles.list( user=user_id, project=tenant_id )
     for role in roles:
         ret[role.name] = {'id': role.id,
                           'name': role.name,

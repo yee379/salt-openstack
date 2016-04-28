@@ -84,3 +84,4 @@ rabbitmq_openstack_user_permissions_set:
     - name: 'rabbitmqctl set_permissions {{ rabbitmq['user_name'] }} ".*" ".*" ".*"'
     - require:
       - cmd: rabbitmq_openstack_user_create
+    - unless: rabbitmqctl list_user_permissions openstack | head -n -1 | tail -n -1 | awk '{if ( $2 == ".*" && $3 == ".*" && $4 == ".*" ){ exit 0 } else { exit 1 } }'

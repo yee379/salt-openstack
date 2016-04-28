@@ -56,7 +56,7 @@ cinder_storage_{{ service }}_running:
 cinder_storage_wait:
   cmd.run:
     - name: sleep 5
-    - require:
+    - onchanges:
 {% for service in cinder['services']['storage'] %}
       - service: cinder_storage_{{ service }}_running
 {% endfor %}

@@ -66,7 +66,8 @@ Management of Keystone users
         - description: OpenStack Compute Service
 
 '''
-
+import logging
+LOG = logging.getLogger(__name__)
 
 def __virtual__():
     '''
@@ -278,6 +279,7 @@ def tenant_present(name, description=None, enabled=True, profile=None,
                                              **connection_args)
 
     if 'Error' not in tenant:
+        description = '' if description == None else description
         if tenant[name]['description'] != description:
             if __opts__['test']:
                 ret['result'] = None

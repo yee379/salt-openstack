@@ -1,4 +1,4 @@
-#!yaml|gpg
+#!yaml
 
 mysql: 
   root_password: change_me
@@ -32,6 +32,10 @@ databases:
     db_name: "heat"
     username: "heat"
     password: change_me
+  magnum:
+    db_name: "magnum"
+    username: "magnum"
+    password: change_me
       
 neutron:
   metadata_secret: change_me
@@ -42,6 +46,20 @@ keystone:
     - "admin"
     - "heat_stack_owner"
     - "heat_stack_user"
+  domains:
+    SLAC:
+      ldap:
+        user: change_me
+        password: change_me
+        url: ldaps://example.com:636
+        use_pool: true
+        use_auth_pool: true
+        page_size: 100
+        chase_referrals: 0
+        query_scope: sub
+        user_tree_dn: DC=example,DC=com
+      identity:
+        driver: keystone.identity.backends.ldap.Identity
   tenants:
     admin:
       users:
@@ -82,6 +100,11 @@ keystone:
             - "admin"
           email: "openstack@slac.stanford.edu"
         heat-cfn:
+          password: change_me
+          roles:
+            - "admin"
+          email: "openstack@slac.stanford.edu"
+        magnum:
           password: change_me
           roles:
             - "admin"
