@@ -185,6 +185,7 @@ neutron_network_ovs_fix_sed:
     - name: sed -i 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' {{ neutron['conf']['ovs_systemd'] }}
     - require:
       - file: neutron_network_ovs_fix_cp
+    - onlyif: grep ovs_neutron_plugin.ini /usr/lib/systemd/system/neutron-openvswitch-agent.service
 
 
 neutron_network_openvswitch_running:
@@ -243,7 +244,7 @@ neutron_network_metadata_agent_running:
 neutron_network_wait:
   cmd.run:
     - name: "sleep 5"
-    - require:
+    - onchanges:
       - service: neutron_network_openvswitch_running
       - service: neutron_network_openvswitch_agent_running
       - service: neutron_network_l3_agent_running
