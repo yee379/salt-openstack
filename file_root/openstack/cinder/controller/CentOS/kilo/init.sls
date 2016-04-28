@@ -102,7 +102,7 @@ cinder_controller_{{ service }}_running:
 cinder_controller_wait:
   cmd.run:
     - name: sleep 5
-    - onchange:
+    - onchanges:
 {% for service in cinder['services']['controller'] %}
       - service: cinder_controller_{{ service }}_running
 {% endfor %}

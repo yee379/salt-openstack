@@ -164,5 +164,6 @@ keystone_wait:
   cmd.run:
     - name: sleep 5
     - require:
-      - service: keystone_service_httpd_running
       - service: keystone_service_dead
+    - onchanges:
+      - service: keystone_service_httpd_running
