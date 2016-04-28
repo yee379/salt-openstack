@@ -258,7 +258,7 @@ def router_present(name=None,
         if not existing_router['external_gateway_info'] and not existing_router['external_gateway_info'] == None:
             if existing_router['external_gateway_info']['network_id'] != gateway_network_id:
                 diff.update({'external_gateway_info': {'network_id': gateway_network_id}})
-        else:
+        elif not 'network_id' in existing_router['external_gateway_info'] or existing_router['external_gateway_info']['network_id'] != gateway_network_id:
             diff.update({'external_gateway_info': {'network_id': gateway_network_id}})
     if diff:
         # update the changes
