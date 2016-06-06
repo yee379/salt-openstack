@@ -40,6 +40,7 @@ nova_controller_conf:
           glance_api_servers: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['admin'] }}
           glance_protocol: {{ salt['openstack_utils.service_urls']( 'glance', by_ip=True )['admin_protocol'] }}
           glance_api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
+          scheduler_max_attempts: {{ salt['pillar.get']( 'nova:scheduler_max_attempts', 3 ) }}
         glance:
           host: "{{ openstack_parameters['controller_ip'] }}"
           api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
