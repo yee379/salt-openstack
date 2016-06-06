@@ -714,15 +714,26 @@ def glance():
     return context
 
 
-def nova():
+def nova( minion_id=None ):
     context = _openstack_service_context('nova')
     context.update({
         'cpu_allocation_ratio': __salt__['pillar.get']('nova'
                                     ':cpu_allocation_ratio', default=16.0),
         'ram_allocation_ratio': __salt__['pillar.get']('nova'
                                     ':ram_allocation_ratio', default=1.5),
+        'preallocate_images': __salt__['pillar.get']('nova'
+                                    ':preallocate_images', default='none'),
         'libvirt_virt_type': libvirt_virt_type()
     })
+    # overwrite with minion defaults
+    if minion_id:
+        host_agg = __salt__['pillar.get']('nova:host_aggregates', default={} )
+        for name, agg in host_agg.iteritems():
+            if 'hosts' in agg and minion_id in agg['hosts']:
+                if isinstance(agg['hosts'][minion_id], dict):
+                    for k,v in agg['hosts'][minion_id].iteritems():
+                        context.update( { k: v } )
+    LOG.debug("NOVA CONTEXT: %s" % (context,))
     return context
 
 

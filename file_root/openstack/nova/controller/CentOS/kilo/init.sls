@@ -1,4 +1,4 @@
-{% set nova = salt['openstack_utils.nova']() %}
+{% set nova = salt['openstack_utils.nova']( grains['id'] ) %}
 {% set neutron = salt['openstack_utils.neutron']() %}
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
@@ -29,8 +29,8 @@ nova_controller_conf:
           osapi_compute_listen_port: {{ salt['openstack_utils.service_urls']( 'nova', by_ip=True )['public_local_port'] }}
           novncproxy_port: {{ salt['pillar.get']('services:novnc:url:public:local_port', 6080 ) }}
           vncserver_proxyclient_address: "{{ openstack_parameters['controller_ip'] }}"
-          cpu_allocation_ratio: {{ salt['pillar.get']('nova:cpu_allocation_ratio') }}
-          ram_allocation_ratio: {{ salt['pillar.get']('nova:ram_allocation_ratio') }}
+          cpu_allocation_ratio: {{ nova['cpu_allocation_ratio'] }}
+          ram_allocation_ratio: {{ nova['ram_allocation_ratio'] }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           network_api_class: nova.network.neutronv2.api.API

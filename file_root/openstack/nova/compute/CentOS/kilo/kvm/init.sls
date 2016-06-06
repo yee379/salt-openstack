@@ -1,4 +1,4 @@
-{% set nova = salt['openstack_utils.nova']() %}
+{% set nova = salt['openstack_utils.nova']( grains['id'] ) %}
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 {% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
@@ -26,6 +26,8 @@ nova_compute_conf:
           novncproxy_port: {{ salt['pillar.get']('services:novnc:url:public:local_port', 6080 ) }}
           vncserver_proxyclient_address: {{ minion_ip }}
           novncproxy_base_url: {{ salt['openstack_utils.service_urls']( 'novnc', by_ip=False )['public_with_path'] }}
+          # cpu_allocation_ratio: {{ nova['cpu_allocation_ratio'] }}
+          # ram_allocation_ratio: {{ nova['ram_allocation_ratio'] }}
           # enabled_apis: osapi_compute, metadata
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
@@ -33,6 +35,7 @@ nova_compute_conf:
           security_group_api: neutron
           linuxnet_interface_driver: nova.network.linux_net.LinuxOVSInterfaceDriver
           firewall_driver: nova.virt.firewall.NoopFirewallDriver
+          preallocate_images: {{ nova['preallocate_images'] }}
         keystone_authtoken:
           insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           auth_uri: {{ keystone_auth['public'] }}
