@@ -196,15 +196,19 @@ if __name__ == '__main__':
     for s in nova.servers.list( search_opts={'all_tenants': 1}, detailed=True ):
         d = s.to_dict()
         logging.debug( "found server: %s" % (d,) )
-        f = flavours[d['flavor']['id']].to_dict()
         logging.debug( '  %s' % d['image'] )
         logging.debug( '  %s' % d['OS-EXT-STS:power_state'] )
         meta = {
             'host': d['name'].replace(' ', '_'),
             'hypervisor': d['OS-EXT-SRV-ATTR:hypervisor_hostname'],
-            'image': f['name'],
             'tenant': tenants[d['tenant_id']],
         }
+        try:
+            f = flavours[str(d['flavor']['id'])].to_dict()
+            meta['image'] = f['name']
+        except:
+            meta['image'] = 'UNKNOWN'
+
         
         # find users in tenant
         if d['user_id'] in users:
@@ -273,9 +277,7 @@ if __name__ == '__main__':
             'real_vcpus': this['vcpus']['real'],
             'total_vcpus': this['vcpus']['total'],
             'used_vcpus': this['vcpus']['used'],
-            'memory_real': this['memory']['real'],
             'memory_total': this['memory']['total'],
-            'memory_used_real': this['memory']['used_real'],
             'memory_free': this['memory']['free'],
             'memory_used': this['memory']['used'],
             'disk_local_gb': this['disk'][0],
@@ -283,6 +285,10 @@ if __name__ == '__main__':
             'disk_free_disk_gb': this['disk'][2],
             'disk_available_least': this['disk'][3],
         }
+        if 'real' in this['memory']:
+            data['memory_real'] = this['memory']['real']
+        if 'used_real' in this['memory']:
+            data['memory_used_real'] = this['memory']['used_real']
         cache.append( pformat_line_protocol( 'host_aggregate', meta, data, now ) )
 
     # get services
