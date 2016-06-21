@@ -559,18 +559,17 @@ def network_script_ip_configs(interface_name=None):
     network_scripts = '/etc/sysconfig/network-scripts'
     config_file = '%s/ifcfg-%s' % (network_scripts, interface_name)
     if not isfile( config_file ):
-        raise SystemError( "interface name '%s' not defined on system: please correct single_nic interface defintion" % (interface_name,))
+        raise SystemError( "interface name '%s' not defined on system: please correct single_nic interface definition" % (interface_name,))
     bootproto = _unquote_str(__salt__['ini.get_option'](
                 config_file,
                 'DEFAULT_IMPLICIT', 'BOOTPROTO'))
     context = {}
 
-    if compare_ignore_case(bootproto, "dhcp"):
+    if compare_ignore_case(bootproto, "dhcp") or compare_ignore_case(bootproto, "none"):
         context.update( { 'OVSBOOTPROTO': 'dhcp', 'OVSDHCPINTERFACES': interface_name, 'BOOTPROTO': 'dhcp' } )
         return context
 
-    elif compare_ignore_case(bootproto, "static") or \
-        compare_ignore_case(bootproto, "none"):
+    elif compare_ignore_case(bootproto, "static"):
         context.update( { 'BOOTPROTO': bootproto } )
         configs = ['IPADDR', 'NETMASK', 'PREFIX', 'GATEWAY', 'DNS1', 'DNS2']
         for config in configs:
