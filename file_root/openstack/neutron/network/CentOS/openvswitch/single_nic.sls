@@ -68,7 +68,7 @@ openvswitch_promisc_interfaces_enable:
 openvswitch_br-proxy_network_script:
   ini.options_present:
     - name: "{{ openvswitch['conf']['network_scripts'] }}/ifcfg-br-proxy"
-    - unless: "ls {{ openvswitch['conf']['network_scripts'] }}/ifcfg-br-proxy"
+    # - unless: "ls {{ openvswitch['conf']['network_scripts'] }}/ifcfg-br-proxy"
     - sections:
         DEFAULT_IMPLICIT:
           DEVICE: br-proxy
