@@ -28,6 +28,7 @@ neutron_network_conf:
           core_plugin: ml2
           service_plugins: router
           allow_overlapping_ips: True
+          global_physnet_mtu: {{ neutron['mtu'] }}
           debug: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['debug_mode']) }}"
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
         keystone_authtoken: 
@@ -44,7 +45,7 @@ neutron_network_conf:
         - pkg: neutron_network_{{ pkg }}_install
 {% endfor %}
 
-
+{% set segment_mtu = neutron['mtu']|int - 46 %}
 neutron_network_ml2_conf:
   ini.options_present:
     - name: "{{ neutron['conf']['ml2'] }}"
@@ -53,6 +54,7 @@ neutron_network_ml2_conf:
           type_drivers: "{{ ','.join(neutron['ml2_type_drivers']) }}"
           tenant_network_types: "{{ ','.join(neutron['tenant_network_types']) }}"
           mechanism_drivers: openvswitch
+          # segment_mtu: {{ segment_mtu }}
 {% if 'flat' in neutron['ml2_type_drivers'] %}
         ml2_type_flat:
           flat_networks: "{{ ','.join(neutron['flat_networks']) }}"
@@ -84,6 +86,7 @@ neutron_network_ml2_conf:
           tunnel_bridge: "{{ neutron['tunneling']['bridge'] }}"
         agent:
           tunnel_types: "{{ ','.join(neutron['tunneling']['types']) }}"
+          veth_mtu: {{ neutron['mtu'] }}
 {% endif %}
     - require:
 {% for pkg in neutron['packages']['network'] %}
@@ -134,13 +137,13 @@ neutron_network_dhcp_agent_conf:
       - pkg: neutron_network_{{ pkg }}_install
 {% endfor %}
 
-
 neutron_network_dnsmasq_conf:
   ini.options_present:
     - name: {{ neutron['conf']['dnsmasq_config_file'] }}
     - sections:
         DEFAULT_IMPLICIT:
-          dhcp-option-force: 26,1454
+          # dhcp-option-force: 26,{{ segment_mtu }}
+          dhcp-option-force: 26,1500
     - require:
       - ini: neutron_network_dhcp_agent_conf
 

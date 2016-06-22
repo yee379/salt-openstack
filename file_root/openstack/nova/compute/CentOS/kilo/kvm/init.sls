@@ -2,6 +2,7 @@
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 {% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
+{% set neutron = salt['openstack_utils.neutron']() %}
 
 archive {{ nova['conf']['nova'] }} compute:
   file.copy:
@@ -36,6 +37,7 @@ nova_compute_conf:
           linuxnet_interface_driver: nova.network.linux_net.LinuxOVSInterfaceDriver
           firewall_driver: nova.virt.firewall.NoopFirewallDriver
           preallocate_images: {{ nova['preallocate_images'] }}
+          network_device_mtu: {{ neutron['mtu'] }}
         keystone_authtoken:
           insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           auth_uri: {{ keystone_auth['public'] }}

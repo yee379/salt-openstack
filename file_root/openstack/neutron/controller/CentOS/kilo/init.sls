@@ -27,6 +27,7 @@ neutron_controller_conf:
           verbose: "{{ salt['openstack_utils.boolean_value'](openstack_parameters['verbose_mode']) }}"
           notify_nova_on_port_status_changes: True
           notify_nova_on_port_data_changes: True
+          global_physnet_mtu: {{ neutron['mtu'] }}
           nova_url: {{ salt['openstack_utils.service_urls']( 'nova', by_ip=True )['public_with_version'] }}
           nova_api_insecure: {{ salt['pillar.get']( 'ssl_insecure', False ) }}
           bind_port: {{ salt['openstack_utils.service_urls']( 'neutron', by_ip=True )['public_local_port'] }}
@@ -66,6 +67,7 @@ neutron_controller_ml2_conf:
           type_drivers: "{{ ','.join(neutron['ml2_type_drivers']) }}"
           tenant_network_types: "{{ ','.join(neutron['tenant_network_types']) }}"
           mechanism_drivers: openvswitch
+          path_mtu: {{ neutron['mtu'] }}
 {% if 'flat' in neutron['ml2_type_drivers'] %}
         ml2_type_flat:
           flat_networks: "{{ ','.join(neutron['flat_networks']) }}"
@@ -87,6 +89,10 @@ neutron_controller_ml2_conf:
           enable_security_group: True
           enable_ipset: True
           firewall_driver: "neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver"
+{% if 'mtu' in neutron %}
+        agent:
+          veth_mtu: {{ neutron['mtu'] }}
+{% endif %}
     - require:
       - ini: neutron_controller_conf
 

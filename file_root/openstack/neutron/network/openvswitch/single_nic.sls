@@ -9,7 +9,7 @@ openvswitch_bridge_single_nic_br-proxy_create:
 
 openvswitch_bridge_single_nic_br-proxy_up:
   cmd.run:
-    - name: "ip link set br-proxy promisc on"
+    - name: "ip link set br-proxy promisc on mtu {{ neutron['mtu'] }}"
     - require: 
       - cmd: openvswitch_bridge_single_nic_br-proxy_create
 
@@ -33,7 +33,7 @@ openvswitch_bridge_{{ bridge }}_create:
 
 openvswitch_bridge_{{ bridge }}_up:
   cmd.run:
-    - name: "ip link set {{ bridge }} up"
+    - name: "ip link set {{ bridge }} up mtu {{ neutron['mtu'] }}"
     - require:
       - cmd: openvswitch_bridge_{{ bridge }}_create
 
@@ -41,7 +41,7 @@ openvswitch_bridge_{{ bridge }}_up:
   {% if bridge not in [ neutron['tunneling']['bridge'], neutron['integration_bridge'], 'br-proxy' ] %}
 openvswitch_veth_{{ bridge }}_create:
   cmd.run:
-    - name: "ip link add veth-proxy-{{ index }} type veth peer name veth-{{ index }}-proxy"
+    - name: "ip link add veth-proxy-{{ index }} type veth peer name veth-{{ index }}-proxy mtu {{ neutron['mtu'] }}"
     - unless: "ip link list | egrep veth-proxy-{{ index }}"
     - require:
       - cmd: openvswitch_bridge_{{ bridge }}_up
@@ -57,7 +57,7 @@ openvswitch_veth-{{ index }}-proxy_add:
 
 openvswitch_veth-{{ index }}-proxy_up:
   cmd.run:
-    - name: "ip link set veth-{{ index }}-proxy up promisc on"
+    - name: "ip link set veth-{{ index }}-proxy up promisc on mtu {{ neutron['mtu'] }}"
     - require:
       - cmd: openvswitch_veth-{{ index }}-proxy_add
 

@@ -16,8 +16,8 @@ openvswitch_promisc_interfaces_script:
     - mode: 755
     - contents: |
         #!/usr/bin/env bash
-        ip link set br-proxy up promisc on
-        ip link set {{ neutron['single_nic']['interface'] }} up promisc on
+        ip link set br-proxy up promisc on mtu {{ neutron['mtu'] }}
+        ip link set {{ neutron['single_nic']['interface'] }} up promisc on mtu {{ neutron['mtu'] }}
 {% set index = 1 %}
 {% for bridge in neutron['bridges'] %}
         ip link set {{ bridge }} up
@@ -75,6 +75,7 @@ openvswitch_br-proxy_network_script:
           DEVICETYPE: ovs
           TYPE: OVSBridge
           ONBOOT: yes
+          MTU: {{ neutron['mtu'] }}
 {% for config in ip_configs %}
           {{ config }}: "{{ ip_configs[config] }}"
 {% endfor %}
@@ -95,6 +96,7 @@ openvswitch_{{ neutron['single_nic']['interface'] }}_ovs_port_network_script:
         OVS_BRIDGE=br-proxy
         NOZEROCONF=yes
         BOOTPROTO=none
+        MTU={{ neutron['mtu'] }}
     - require:
       - ini: openvswitch_br-proxy_network_script
 

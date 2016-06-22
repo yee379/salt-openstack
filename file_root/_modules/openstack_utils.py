@@ -764,6 +764,8 @@ def neutron():
     for b, d in context['bridges'].iteritems():
         if d and 'single_nic' in d:
             context['single_nic'] = d['single_nic']
+    # mtu
+    context['mtu'] = context['single_nic']['mtu'] if 'mtu' in context['single_nic'] else 1500
     if not 'disable_interfaces' in context['single_nic']:
         context['single_nic']['disable_interfaces'] = ()
     return context

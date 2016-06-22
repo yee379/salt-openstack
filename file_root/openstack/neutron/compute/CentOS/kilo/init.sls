@@ -63,6 +63,7 @@ neutron_compute_ml2_conf:
           type_drivers: "{{ ','.join(neutron['ml2_type_drivers']) }}"
           tenant_network_types: "{{ ','.join(neutron['tenant_network_types']) }}"
           mechanism_drivers: openvswitch
+          path_mtu: {{ neutron['mtu'] }}
 {% if 'flat' in neutron['ml2_type_drivers'] %}
         ml2_type_flat:
           flat_networks: "{{ ','.join(neutron['flat_networks']) }}"
