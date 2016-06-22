@@ -1,5 +1,5 @@
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
-{% set neutron = salt['openstack_utils.neutron']() %}
+{% set neutron = salt['openstack_utils.neutron'](grains['id']) %}
 
 
 # Delete all OVS bridges created in the previous OpenStack deployment

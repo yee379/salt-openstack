@@ -2,7 +2,7 @@
 {% set service_users = salt['openstack_utils.openstack_users']('service') %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 {% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
-{% set neutron = salt['openstack_utils.neutron']() %}
+{% set neutron = salt['openstack_utils.neutron'](grains['id']) %}
 
 archive {{ nova['conf']['nova'] }} compute:
   file.copy:

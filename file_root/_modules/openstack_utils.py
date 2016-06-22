@@ -408,7 +408,7 @@ def flat_networks():
     return flat_networks
 
 
-def bridges():
+def bridges(minion_id):
     '''
         returns a dictionary that with bridges and the bridged interfaces
         defined in pillar
@@ -426,7 +426,6 @@ def bridges():
         physnets = __salt__['pillar.get']('neutron:'
                         'type_drivers:%s:physnets' % network_type, default=[])
         for physnet in physnets:
-            minion_id = __salt__['grains.get']('id')
             if minion_id in physnets[physnet]['hosts']:
                 bridges.update({ physnets[physnet]['bridge']:
                                  physnets[physnet]['hosts'][minion_id]})
@@ -736,7 +735,7 @@ def nova( minion_id=None ):
     return context
 
 
-def neutron():
+def neutron( minion_id=None ):
     context = _openstack_service_context('neutron')
     context.update({
         'ml2_type_drivers': ml2_type_drivers(),
@@ -746,7 +745,7 @@ def neutron():
         'bridge_mappings': bridge_mappings(),
         'vlan_networks': vlan_networks(),
         'flat_networks': flat_networks(),
-        'bridges': bridges(),
+        'bridges': bridges( minion_id ),
         'tunneling': __salt__['pillar.get']('neutron:tunneling'),
         'vxlan_group': __salt__['pillar.get']('neutron:type_drivers:'
                                               'vxlan:vxlan_group'),

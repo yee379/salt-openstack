@@ -1,5 +1,5 @@
 {% set openvswitch = salt['openstack_utils.openvswitch']() %}
-{% set neutron = salt['openstack_utils.neutron']() %}
+{% set neutron = salt['openstack_utils.neutron'](grains['id']) %}
 
 
 hard_reset_network_openvswitch_promisc_script_delete:

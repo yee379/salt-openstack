@@ -1,4 +1,4 @@
-{% set neutron = salt['openstack_utils.neutron']() %}
+{% set neutron = salt['openstack_utils.neutron'](grains['id']) %}
 
 include:
   - openstack.neutron.compute.CentOS.liberty

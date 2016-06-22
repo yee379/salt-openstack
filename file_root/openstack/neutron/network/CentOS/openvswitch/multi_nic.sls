@@ -1,4 +1,4 @@
-{% set neutron = salt['openstack_utils.neutron']() %}
+{% set neutron = salt['openstack_utils.neutron'](grains['id']) %}
 {% set openvswitch = salt['openstack_utils.openvswitch']() %}
 
 

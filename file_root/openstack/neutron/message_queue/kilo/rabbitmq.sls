@@ -1,4 +1,4 @@
-{% set neutron = salt['openstack_utils.neutron']() %}
+{% set neutron = salt['openstack_utils.neutron'](grains['id']) %}
 {% set rabbitmq = salt['openstack_utils.rabbitmq']() %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 

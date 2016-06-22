@@ -1,4 +1,4 @@
-{% set neutron = salt['openstack_utils.neutron']() %}
+{% set neutron = salt['openstack_utils.neutron'](grains['id']) %}
 
 
 openvswitch_bridge_single_nic_br-proxy_create:

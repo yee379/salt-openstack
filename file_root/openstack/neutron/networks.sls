@@ -1,4 +1,4 @@
-{% set neutron = salt['openstack_utils.neutron']() %}
+{% set neutron = salt['openstack_utils.neutron'](grains['id']) %}
 {% set keystone_service = salt['openstack_utils.service_urls']( 'keystone', by_ip=True ) %}
 {% set openstack_parameters = salt['openstack_utils.openstack_parameters']() %}
 
