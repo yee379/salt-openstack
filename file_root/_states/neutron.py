@@ -88,6 +88,9 @@ def network_present(name=None,
     if diff:
         # update the changes
         network_arguments = diff.copy()
+        for param in network_arguments:
+            if 'provider_' in param or 'router_' in param:
+                network_arguments[param.replace('_', ':', 1)] = network_arguments[param]
         network_arguments.update(connection_args)
         try:
             LOG.debug('updating network {0} with changes {1}'.format(
