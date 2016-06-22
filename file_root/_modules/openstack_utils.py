@@ -760,6 +760,10 @@ def neutron():
         'routers': routers(),
         'security_groups': security_groups()
     })
+    # overwrite the single_nic settings if local definition exists
+    for b, d in context['bridges'].iteritems():
+        if d and 'single_nic' in d:
+            context['single_nic'] = d['single_nic']
     if not 'disable_interfaces' in context['single_nic']:
         context['single_nic']['disable_interfaces'] = ()
     return context
