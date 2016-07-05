@@ -67,3 +67,7 @@ system_repository_{{ pkg }}_install:
   {% endfor %}
 {% endfor %}
 
+ensure crond enabled:
+  service.running:
+    - name: crond
+    
