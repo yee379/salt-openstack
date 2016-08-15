@@ -4,6 +4,24 @@
 {% set keystone_auth = salt['openstack_utils.keystone_auth']( by_ip=True ) %}
 {% set neutron = salt['openstack_utils.neutron'](grains['id']) %}
 
+enable live-migrate configuration:
+  ini.options_present:
+    - name: /etc/libvirt/libvirtd.conf
+    - sections:
+        DEFAULT_IMPLICIT:
+          listen_tcp: '1'
+          tcp_port: '"16509"'
+          listen_addr: '"0.0.0.0"'
+          listen_tls: '0'
+          auth_tcp: '"none"'
+
+enable live-migrate libvirtd listen:
+  ini.options_present:
+    - name: /etc/sysconfig/libvirtd
+    - sections:
+       DEFAULT_IMPLICIT:
+         LIBVIRTD_ARGS: '"--listen"'
+
 archive {{ nova['conf']['nova'] }} compute:
   file.copy:
     - name: {{ nova['conf']['nova'] }}.orig
@@ -65,6 +83,8 @@ nova_compute_conf:
           admin_password: "{{ service_users['neutron']['password'] }}"
         libvirt:
           virt_type: {{ nova['libvirt_virt_type'] }}
+          block_migration_flag: VIR_MIGRATE_UNDEFINE_SOURCE, VIR_MIGRATE_PEER2PEER, VIR_MIGRATE_NON_SHARED_INC, VIR_MIGRATE_LIVE
+          
     - require:
         - file: archive {{ nova['conf']['nova'] }} compute
 {% for pkg in nova['packages']['compute']['kvm'] %}
@@ -83,6 +103,8 @@ nova_compute_{{ service }}_running:
       - ini: nova_rabbitmq_conf
       - ini: nova_compute_conf
       - file: push policy.json configuration
+      - ini: enable live-migrate configuration
+      - ini: enable live-migrate libvirtd listen
 {% endfor %}
 
 

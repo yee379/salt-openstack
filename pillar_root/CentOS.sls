@@ -13,6 +13,7 @@ resources:
           juno: "http://rdo.fedorapeople.org/openstack-juno/rdo-release-juno.rpm"
           kilo: "http://rdo.fedorapeople.org/openstack-kilo/rdo-release-kilo.rpm"
           liberty: "https://rdoproject.org/repos/openstack-liberty/rdo-release-liberty.rpm"
+      ovirt: "http://resources.ovirt.org/pub/yum-repo/ovirt-release35.rpm"
     repo_packages:
       - "openstack-selinux"
     services:

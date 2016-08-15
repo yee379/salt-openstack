@@ -607,7 +607,7 @@ def yum_repository():
                                 'repositories:openstack:series:%s' % series)
     epel_repo_url = __salt__['pillar.get']('resources:system:repositories'
                                                                     ':epel')
-    return {
+    this = {
         'repositories': {
             'epel': {
                 'url': epel_repo_url,
@@ -624,6 +624,15 @@ def yum_repository():
         'packages': __salt__['pillar.get']('resources:'
                                         'system:repo_packages', default=[])
     }
+    
+    # add ovirt?
+    ovirt_repo_url = __salt__['pillar.get']('resources:system:repositories:ovirt', default=None)
+    if ovirt_repo_url:
+        this['repositories']['ovirt'] = {
+            'url': ovirt_repo_url,
+            'name': _rpm_repo_name(ovirt_repo_url)
+        }
+    return this
 
 def __http_proxy_args():
     proto = __salt__['pillar.get']('http_proxy:proto', default=None)
@@ -721,7 +730,8 @@ def nova( minion_id=None ):
                                     ':ram_allocation_ratio', default=1.5),
         'preallocate_images': __salt__['pillar.get']('nova'
                                     ':preallocate_images', default='none'),
-        'libvirt_virt_type': libvirt_virt_type()
+        'libvirt_virt_type': libvirt_virt_type(),
+        'live_migration_progress_timeout': __salt__['pillar.get']('nova:live_migration_progress_timeout', default=150)
     })
     # overwrite with minion defaults
     if minion_id:
