@@ -88,6 +88,18 @@ nova_controller_sqlite_delete:
     - require:
       - cmd: nova_db_sync
 
+ensure logrotate permissions:
+  file.managed:
+    - name: /etc/logrotate.d/openstack-nova
+    - contents: |
+        /var/log/nova/*.log {
+            rotate 14
+            size 10M
+            create 0644 nova nova
+            missingok
+            compress
+        }
+        
 {% for service in nova['services']['controller'] %}
 nova_controller_{{ service }}_running:
   service.running:

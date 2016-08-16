@@ -91,6 +91,18 @@ nova_compute_conf:
         - pkg: nova_compute_{{ pkg }}_install
 {% endfor %}
 
+ensure logrotate permissions:
+  file.managed:
+    - name: /etc/logrotate.d/openstack-nova
+    - contents: |
+        /var/log/nova/*.log {
+            rotate 14
+            size 10M
+            create 0644 nova nova
+            missingok
+            compress
+        }
+
 {% for service in nova['services']['compute']['kvm'] %}
 nova_compute_{{ service }}_running:
   service.running:
